@@ -1,0 +1,82 @@
+{
+ "actualizado": "2026-07-23T15:15:07Z",
+ "granos_ros": {
+  "fecha": "22/07/2026",
+  "moneda": "ARS/t",
+  "soja": 508500.0,
+  "sorgo": 262370.0,
+  "girasol": null,
+  "trigo": 311000.0,
+  "maiz": 280100.0
+ },
+ "futuros": {
+  "wti": null,
+  "brent": null,
+  "algodon": null,
+  "soja_cbot": null,
+  "maiz_cbot": null,
+  "trigo_cbot": null
+ },
+ "bonos_usa": {
+  "y2": 4.31,
+  "y10": 4.67,
+  "fecha": "2026-07-22"
+ },
+ "ipim": {
+  "serie": [
+   {
+    "fecha": "2025-06-01",
+    "valor": 1.6
+   },
+   {
+    "fecha": "2025-07-01",
+    "valor": 2.8
+   },
+   {
+    "fecha": "2025-08-01",
+    "valor": 3.1
+   },
+   {
+    "fecha": "2025-09-01",
+    "valor": 3.7
+   },
+   {
+    "fecha": "2025-10-01",
+    "valor": 1.1
+   },
+   {
+    "fecha": "2025-11-01",
+    "valor": 1.6
+   },
+   {
+    "fecha": "2025-12-01",
+    "valor": 2.4
+   },
+   {
+    "fecha": "2026-01-01",
+    "valor": 1.7
+   },
+   {
+    "fecha": "2026-02-01",
+    "valor": 1.0
+   },
+   {
+    "fecha": "2026-03-01",
+    "valor": 3.4
+   },
+   {
+    "fecha": "2026-04-01",
+    "valor": 5.2
+   },
+   {
+    "fecha": "2026-05-01",
+    "valor": 2.5
+   }
+  ],
+  "ultimo": {
+   "fecha": "2026-05-01",
+   "valor": 2.5
+  }
+ },
+ "novillo": null
+}

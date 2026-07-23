@@ -328,11 +328,6 @@ const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov'
 
 /* ================= Datos demo (fuente pendiente) ================= */
 const DEMO = {
-  soja_ros: 292, maiz_ros: 178, trigo_ros: 205, girasol_ros: 330,
-  soja_cbot: 378,
-  wti: 68.4, brent: 71.9, algodon: 67.2,
-  ust10: 4.32, ust2: 3.95,
-  ipim: 1.8,
   novillo: 3685, ternero: 4120, vaca_consumo: 2890,
   urea: 618, fosfato: 745,
   arrendamiento: 18,
@@ -386,6 +381,7 @@ async function cargarTodo() {
       });
     }),
     j('https://api.open-meteo.com/v1/forecast?latitude=-33.89&longitude=-60.57&daily=precipitation_sum&past_days=7&forecast_days=7&timezone=America%2FArgentina%2FBuenos_Aires').then(d => S.lluvia = d.daily),
+    fetch('datos.json?v=' + Date.now()).then(r => r.ok ? r.json() : null).then(d => { if (d) S.ext = d; }),
   ];
   const rs = await Promise.allSettled(tareas);
   const fallas = rs.filter(r => r.status === 'rejected').length;
@@ -422,24 +418,33 @@ function renderMercados() {
   let inter = null;
   if (S.ipc.length === 12) inter = (S.ipc.reduce((a,m)=>a*(1+m.valor/100),1)-1)*100;
   if (ult) S.vals.ipc_ultimo = { v: ult.valor };
+  const ipimU = S.ext && S.ext.ipim && S.ext.ipim.ultimo;
   $('g-inflacion').innerHTML = [
     card('Riesgo país', d.riesgo ? fmt(d.riesgo.valor) : '…', { live: !!d.riesgo, unidad:'pb', sub: d.riesgo ? d.riesgo.fecha : '' }),
     card('IPC último mes (minorista)', ult ? fmt(ult.valor,1)+'%' : '…', { live: !!ult, sub: ult ? mesLabel(ult.fecha) : '' }),
     card('IPC interanual (12 m)', inter!=null ? fmt(inter,1)+'%' : '…', { live: inter!=null, sub:'acumulado últimos 12 meses' }),
-    card('IPIM último mes (mayorista)', fmt(DEMO.ipim,1)+'%', { sub:'INDEC — fuente a conectar' }),
+    card('IPIM último mes (mayorista)', ipimU ? fmt(ipimU.valor,1)+'%' : '…', { live: !!ipimU, sub: ipimU ? mesLabel(ipimU.fecha)+' · INDEC' : 'cargando' }),
     card('Plazo fijo TNA', d.pf_tna ? fmt(d.pf_tna.v,1)+'%' : '…', { live: !!d.pf_tna, sub:'Banco Nación · ref. tasas' }),
   ].join('');
 
+  const fu = (S.ext && S.ext.futuros) || {};
+  const bo = (S.ext && S.ext.bonos_usa) || {};
+  const cx = (lbl, v, dec, opts) => card(lbl, v!=null ? fmt(v,dec) : '…', Object.assign({ live: v!=null }, opts));
   $('g-granos').innerHTML = granosCards();
   $('g-otros').innerHTML = [
-    card('Petróleo WTI', fmt(DEMO.wti,1), { unidad:'USD/bbl' }),
-    card('Petróleo Brent', fmt(DEMO.brent,1), { unidad:'USD/bbl' }),
-    card('Algodón ICE', fmt(DEMO.algodon,1), { unidad:'¢/lb', sub:'referencia costo denim' }),
-    card('Bono USA 10 años', fmt(DEMO.ust10,2)+'%', { sub:'rendimiento' }),
-    card('Bono USA 2 años', fmt(DEMO.ust2,2)+'%', { sub:'rendimiento' }),
-    card('Soja Chicago (CBOT)', fmt(DEMO.soja_cbot), { unidad:'USD/t' }),
+    cx('Petróleo WTI', fu.wti, 1, { unidad:'USD/bbl' }),
+    cx('Petróleo Brent', fu.brent, 1, { unidad:'USD/bbl' }),
+    cx('Algodón ICE', fu.algodon, 1, { unidad:'¢/lb', sub:'referencia costo denim' }),
+    card('Bono USA 10 años', bo.y10!=null ? fmt(bo.y10,2)+'%' : '…', { live: bo.y10!=null, sub:'rendimiento · '+(bo.fecha||'') }),
+    card('Bono USA 2 años', bo.y2!=null ? fmt(bo.y2,2)+'%' : '…', { live: bo.y2!=null, sub:'rendimiento · '+(bo.fecha||'') }),
+    cx('Soja Chicago (CBOT)', fu.soja_cbot, 0, { unidad:'USD/t' }),
+    cx('Maíz Chicago (CBOT)', fu.maiz_cbot, 0, { unidad:'USD/t' }),
+    cx('Trigo Chicago (CBOT)', fu.trigo_cbot, 0, { unidad:'USD/t' }),
   ].join('');
-  $('note-mercados').innerHTML = 'Las tarjetas marcadas <b>Demo</b> (granos pizarra Rosario, petróleo, algodón, bonos USA, IPIM) todavía no tienen fuente gratuita directa: se conectan en el paso siguiente mediante un actualizador automático que las refresca cada hora. Las marcadas <b>En vivo</b> ya son datos reales.';
+  const actExt = S.ext ? new Date(S.ext.actualizado).toLocaleString('es-AR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : null;
+  $('note-mercados').innerHTML = actExt
+    ? 'Granos, petróleo, algodón, bonos e IPIM se actualizan automáticamente cada hora (última corrida: '+actExt+' hs). El resto es en tiempo real.'
+    : 'Cargando datos del actualizador automático…';
 
   DEMO_KEYS_TO_VALS();
   dibujarChartDolar();
@@ -447,16 +452,28 @@ function renderMercados() {
 }
 
 function granosCards() {
+  const g = (S.ext && S.ext.granos_ros) || {};
+  const may = S.vals.dolar_mayorista ? S.vals.dolar_mayorista.venta : null;
+  const item = (nombre, key) => {
+    const v = g[key];
+    if (v == null) return card(nombre, g.fecha ? 'S/C' : '…', { live: !!g.fecha, sub: g.fecha ? 'sin cotización · pizarra '+g.fecha : 'cargando' });
+    const usd = may ? Math.round(v / may) : null;
+    return card(nombre, '$'+fmt(Math.round(v/1000)), { live: true, unidad:'mil/t',
+      sub: (usd ? '≈ USD '+usd+'/t · ' : '') + 'pizarra '+(g.fecha||'') });
+  };
   return [
-    card('Soja Rosario', fmt(DEMO.soja_ros), { unidad:'USD/t', sub:'pizarra CAC' }),
-    card('Maíz Rosario', fmt(DEMO.maiz_ros), { unidad:'USD/t', sub:'pizarra CAC' }),
-    card('Trigo Rosario', fmt(DEMO.trigo_ros), { unidad:'USD/t', sub:'pizarra CAC' }),
-    card('Girasol Rosario', fmt(DEMO.girasol_ros), { unidad:'USD/t', sub:'pizarra CAC' }),
+    item('Soja Rosario','soja'),
+    item('Maíz Rosario','maiz'),
+    item('Trigo Rosario','trigo'),
+    item('Girasol Rosario','girasol'),
+    item('Sorgo Rosario','sorgo'),
   ].join('');
 }
 
 function DEMO_KEYS_TO_VALS() {
-  S.vals.soja_ros = { v: DEMO.soja_ros };
+  const g = (S.ext && S.ext.granos_ros) || {};
+  const may = S.vals.dolar_mayorista ? S.vals.dolar_mayorista.venta : null;
+  if (g.soja != null && may) S.vals.soja_ros = { v: Math.round(g.soja / may) };
   S.vals.novillo = { v: DEMO.novillo };
   S.vals.aporto_uptime = { v: Math.min(...APORTO.sistemas.map(s=>s.uptime)) };
   S.vals.aporto_mora30 = { v: APORTO.fin.mora30 };
@@ -522,7 +539,7 @@ function renderTelas() {
     card('Real brasileño (USD/BRL)', d.usd_brl ? 'R$ '+fmt(d.usd_brl.v,2) : '…', { live: !!d.usd_brl, sub:'sube = importar más barato' }),
     card('Real vs peso (BRL/ARS)', d.brl_ars ? '$'+fmt(d.brl_ars.venta,1) : '…', { live: !!d.brl_ars }),
     card('Dólar mayorista', d.dolar_mayorista ? '$'+fmt(d.dolar_mayorista.venta) : '…', { live: !!d.dolar_mayorista, sub:'para pagos de importación' }),
-    card('Algodón ICE', fmt(DEMO.algodon,1), { unidad:'¢/lb', sub:'insumo del denim' }),
+    card('Algodón ICE', (S.ext && S.ext.futuros && S.ext.futuros.algodon!=null) ? fmt(S.ext.futuros.algodon,1) : '…', { live: !!(S.ext && S.ext.futuros && S.ext.futuros.algodon!=null), unidad:'¢/lb', sub:'insumo del denim' }),
   ].join('');
 
   let tot = 0, totV = 0;
