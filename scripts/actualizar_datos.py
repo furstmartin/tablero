@@ -60,9 +60,30 @@ def yahoo(ticker):
                 raise
     return None
 
+F_SOJA = 0.367437   # ¢/bushel -> USD/t (soja)
+F_MAIZ = 0.393683   # ¢/bushel -> USD/t (maíz y trigo)
+
+def cnbc():
+    """CNBC: los 6 futuros en una sola llamada."""
+    url = ("https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol"
+           "?symbols=%40CL.1%7C%40BZ.1%7C%40CT.1%7C%40S.1%7C%40C.1%7C%40W.1"
+           "&requestMethod=itv&noform=1&partnerId=2&fund=1&exthrs=1&output=json")
+    d = json.loads(get(url))
+    q = {x["symbol"]: float(x["last"].replace(",", "")) for x in d["FormattedQuoteResult"]["FormattedQuote"] if x.get("last")}
+    return {
+        "wti": q.get("@CL.1"),
+        "brent": q.get("@BZ.1"),
+        "algodon": q.get("@CT.1"),                                       # ¢/lb
+        "soja_cbot": round(q["@S.1"] * F_SOJA, 1) if q.get("@S.1") else None,
+        "maiz_cbot": round(q["@C.1"] * F_MAIZ, 1) if q.get("@C.1") else None,
+        "trigo_cbot": round(q["@W.1"] * F_MAIZ, 1) if q.get("@W.1") else None,
+    }
+
 def futuros():
-    F_SOJA = 0.367437   # ¢/bushel -> USD/t (soja)
-    F_MAIZ = 0.393683   # ¢/bushel -> USD/t (maíz y trigo)
+    out = intento(cnbc)
+    if out and out.get("wti") is not None:
+        return out
+    # Respaldo: Yahoo Finance de a un ticker
     out = {
         "wti": intento(lambda: yahoo("CL=F")),
         "brent": intento(lambda: yahoo("BZ=F")),
