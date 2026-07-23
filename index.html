@@ -822,13 +822,37 @@ function renderTelas() {
   const peds = (S.telas.compras && S.telas.compras.pedidos) || [];
   $('telas-nped').textContent = peds.length + ' pendientes';
   const colEstado = e => /TRANSITO/i.test(e) ? 'var(--accent)' : /SIN CONF/i.test(e) ? 'var(--warn)' : 'var(--pos)';
-  $('rows-pedidos').innerHTML = peds.map(p => `<div class="row">
-    <div class="nm">
-      <div class="t">#${p.pedido}${p.factura?' · '+p.factura:''} → ${p.destino||'—'}</div>
-      <div class="s">${p.articulo||''} · <span style="color:${colEstado(p.estado)}; font-weight:600;">${p.estado}</span></div>
-    </div>
-    <div class="pr"><div class="v mono">${p.pedida!=null?fmt(p.pedida):'—'} m</div><div class="d mono" style="color:var(--faint)">entreg. ${p.entregada!=null?fmt(p.entregada):'0'}</div></div>
-  </div>`).join('') || '<div class="c-sub" style="padding:8px 0;">Sin pedidos pendientes</div>';
+
+  // Agrupar: cliente (destino) → nro de pedido → artículos
+  const porCliente = {};
+  for (const p of peds) {
+    const cli = p.destino || 'Sin destino';
+    if (!porCliente[cli]) porCliente[cli] = {};
+    if (!porCliente[cli][p.pedido]) porCliente[cli][p.pedido] = [];
+    porCliente[cli][p.pedido].push(p);
+  }
+  const clientes = Object.keys(porCliente).sort((a,b) => a.localeCompare(b));
+  let html = '';
+  for (const cli of clientes) {
+    const pedidosCli = porCliente[cli];
+    const totalCli = Object.values(pedidosCli).flat().reduce((a,p)=>a+(p.pedida||0),0);
+    html += `<div class="sect" style="margin:12px 0 2px; color:var(--text); font-size:12.5px;">${cli}
+      <span style="color:var(--faint); font-weight:500; text-transform:none; letter-spacing:0;"> · ${Object.keys(pedidosCli).length} pedido${Object.keys(pedidosCli).length>1?'s':''} · ${fmt(totalCli)} m</span></div>`;
+    const nros = Object.keys(pedidosCli).sort((a,b) => a.localeCompare(b, undefined, {numeric:true}));
+    for (const nro of nros) {
+      const items = pedidosCli[nro];
+      const p0 = items[0];
+      html += `<div style="padding:8px 0 2px; font-size:12px;" class="mono">
+        <span style="font-weight:600;">#${nro}</span>${p0.factura?` · ${p0.factura}`:''} ·
+        <span style="color:${colEstado(p0.estado)}; font-weight:600;">${p0.estado}</span></div>`;
+      html += items.map(p => `<div class="kv" style="padding:7px 0 7px 12px;">
+        <span class="k" style="font-size:12.5px;">${p.articulo||'—'}</span>
+        <span class="vs"><span class="v mono" style="font-size:13px;">${p.pedida!=null?fmt(p.pedida):'—'} m</span>
+        <span class="d mono" style="color:var(--faint)">entreg. ${p.entregada!=null?fmt(p.entregada):'0'}</span></span>
+      </div>`).join('');
+    }
+  }
+  $('rows-pedidos').innerHTML = html || '<div class="c-sub" style="padding:8px 0;">Sin pedidos pendientes</div>';
 }
 async function intentarDesbloqueo() {
   const clave = $('telas-clave').value;
