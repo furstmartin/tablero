@@ -332,12 +332,30 @@
       <div class="c-title" style="padding:10px 0 4px;">Variables de importación (Brasil)</div>
       <div id="rows-telas"></div>
     </div>
-    <div class="card">
-      <div class="c-title">Cuentas corrientes de clientes</div>
-      <div class="chip-row" id="chips-ctacte"></div>
-      <div id="rows-deudores"></div>
+    <div class="card" id="telas-lock" style="display:none;">
+      <div class="c-title">🔒 Datos del negocio protegidos</div>
+      <div class="c-sub" style="margin-bottom:10px;">Cuentas, proveedor, rentabilidad y pedidos están cifrados. Ingresá tu clave para verlos en este dispositivo.</div>
+      <div style="display:flex; gap:8px;">
+        <input type="password" id="telas-clave" placeholder="Clave" style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; font-family:inherit;">
+        <button id="telas-unlock" style="padding:10px 16px; border-radius:10px; border:none; background:var(--accent); color:#fff; font-weight:600; font-size:13px; cursor:pointer; font-family:inherit;">Desbloquear</button>
+      </div>
+      <div id="telas-err" style="color:var(--neg); font-size:12px; margin-top:8px; display:none;">Clave incorrecta. Probá de nuevo.</div>
     </div>
-    <div class="note info"><b>Demo.</b> Se vincula a tus planillas de Google Sheets (cuentas corrientes, stock denim/gabardina, pedidos en tránsito desde Brasil) cuando me las compartas.</div>
+
+    <div id="telas-priv" style="display:none; flex-direction:column; gap:var(--gap);">
+      <div class="card">
+        <div class="c-head"><div class="c-title">Situación del negocio</div><span class="c-tag mono" id="telas-fecha"></span></div>
+        <div class="chip-row" id="chips-ctacte"></div>
+        <div class="sect" style="margin:6px 0 2px;">Cuentas corrientes de clientes</div>
+        <div id="rows-deudores"></div>
+      </div>
+      <div class="card">
+        <div class="c-head"><div class="c-title">Pedidos pendientes</div><span class="c-tag mono" id="telas-nped"></span></div>
+        <div id="rows-pedidos"></div>
+      </div>
+      <button id="telas-relock" class="back-btn" style="padding:4px 2px;">🔒 Bloquear de nuevo en este dispositivo</button>
+    </div>
+    <div class="note info" id="telas-nota" style="display:none;">Todavía no hay datos cifrados publicados — se generan en la próxima corrida del actualizador.</div>
   </section>
 
   <!-- ============ ALERTAS ============ -->
@@ -417,16 +435,9 @@ const APORTO = {
   fin: [ ['Cartera activa','$2.840M'], ['Mora > 30 días','6,2%'], ['Mora > 90 días','2,8%'], ['Cobranza del día','$24,1M'], ['Spread financiero','18,5%'] ],
   bots: [ ['Apolito · conversaciones','1.240'], ['Apolito · conversión','7,7%'], ['Pocho · consultas','860'], ['Pocho · efectividad','15,3%'] ],
 };
-const CTACTE = {
-  chips: [ ['Saldo total','USD 145k', 'var(--text)'], ['Vencido','USD 24,7k', 'var(--neg)'], ['Al día','83%', 'var(--pos)'] ],
-  deudores: [
-    ['Textil San Justo SRL','vencido 18 días','USD 48,2k'],
-    ['Denim Center SA','vencido 32 días','USD 29,9k'],
-    ['Tejidos del Litoral','vencido 45 días','USD 12,6k'],
-    ['Confecciones Norte','al día','USD 35,7k'],
-    ['Moda Sur Distribuidora','al día','USD 18,3k'],
-  ],
-};
+/* Telas: datos cifrados (AES-256-GCM), se descifran con la clave del usuario */
+let telasClave = null;
+try { telasClave = localStorage.getItem('tablero-telas-clave'); } catch(e) {}
 
 /* ================= Utiles ================= */
 function poly(arr, w, h, pad=3) {
@@ -488,6 +499,11 @@ async function cargarTodo() {
     }),
     j('https://api.open-meteo.com/v1/forecast?latitude=-28.9711&longitude=-59.8489&daily=precipitation_sum&past_days=7&forecast_days=7&timezone=America%2FArgentina%2FBuenos_Aires').then(d => S.lluvia = d.daily),
     fetch('datos.json?v=' + Date.now()).then(r => r.ok ? r.json() : null).then(d => { if (d) S.ext = d; }).catch(()=>{}),
+    fetch('telas.enc.json?v=' + Date.now()).then(r => r.ok ? r.json() : null).then(async d => {
+      if (!d) return;
+      S.telasEnc = d;
+      if (telasClave && !S.telas) { try { S.telas = await descifrarTelas(telasClave); } catch(e) {} }
+    }).catch(()=>{}),
   ];
   const rs = await Promise.allSettled(tareas);
   if (rs.some(r => r.status === 'fulfilled')) S.lastOk = new Date();
@@ -764,6 +780,17 @@ function renderCampo() {
 }
 
 /* ================= Telas ================= */
+function b64bytes(s) { const bin = atob(s); const a = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i); return a; }
+async function descifrarTelas(clave) {
+  const e = S.telasEnc;
+  const enc = new TextEncoder();
+  const km = await crypto.subtle.importKey('raw', enc.encode(clave), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt: b64bytes(e.salt), iterations: e.iter, hash:'SHA-256' },
+    km, { name:'AES-GCM', length:256 }, false, ['decrypt']);
+  const pt = await crypto.subtle.decrypt({ name:'AES-GCM', iv: b64bytes(e.nonce) }, key, b64bytes(e.data));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
 function renderTelas() {
   const v = S.vals;
   const f = (S.ext && S.ext.futuros) || {};
@@ -772,9 +799,60 @@ function renderTelas() {
     kv('Real vs peso (BRL/ARS)', v.brl_ars?'$'+fmt(v.brl_ars.venta,1):'…') +
     kv('Dólar mayorista', v.dolar_mayorista?'$'+fmt(v.dolar_mayorista.venta):'…', {txt:'pagos de importación', color:MUT}) +
     kv('Algodón ICE (¢/lb)', f.algodon!=null?fmt(f.algodon,1):'…', {txt:'insumo del denim', color:MUT});
-  $('chips-ctacte').innerHTML = CTACTE.chips.map(([l,val,col]) => `<div class="chip"><div class="lbl">${l}</div><div class="val mono" style="font-size:16px; color:${col};">${val}</div></div>`).join('');
-  $('rows-deudores').innerHTML = CTACTE.deudores.map(([n,st,a]) => `<div class="kv"><span><span style="font-size:13px; color:var(--text); display:block;">${n}</span><span style="font-size:10.5px; color:${st.startsWith('vencido')?'var(--neg)':'var(--faint)'};">${st}</span></span><span class="v mono">${a}</span></div>`).join('');
+
+  const lock = $('telas-lock'), priv = $('telas-priv'), nota = $('telas-nota');
+  if (!S.telasEnc) { lock.style.display='none'; priv.style.display='none'; nota.style.display='block'; return; }
+  nota.style.display='none';
+  if (!S.telas) { lock.style.display='block'; priv.style.display='none'; return; }
+  lock.style.display='none'; priv.style.display='flex';
+
+  const b = S.telas.balance || {};
+  const porCobrar = (b.clientes||[]).reduce((a,c)=>a+c.ars, 0);
+  const tc = b.tc || (v.dolar_mayorista ? v.dolar_mayorista.venta : null);
+  $('telas-fecha').textContent = b.fecha || '';
+  const chip = (l, val, col, sub) => `<div class="chip"><div class="lbl">${l}</div><div class="val mono" style="font-size:15px; color:${col||'var(--text)'};">${val}</div>${sub?`<div class="d mono" style="color:var(--faint)">${sub}</div>`:''}</div>`;
+  $('chips-ctacte').innerHTML =
+    chip('Por cobrar', '$'+fmt(porCobrar/1e6,1)+'M', null, tc?'US$ '+fmt(porCobrar/tc/1000,0)+'k':'') +
+    chip('Proveedor (FOB)', b.proveedor_usd!=null?'US$ '+fmt(Math.abs(b.proveedor_usd)/1000,1)+'k':'—', 'var(--neg)', b.proveedor_ars!=null?'$'+fmt(Math.abs(b.proveedor_ars)/1e6,1)+'M':'') +
+    chip('Rentabilidad (PN)', b.pn_ars!=null?'$'+fmt(b.pn_ars/1e6,1)+'M':'—', 'var(--pos)', b.pn_usd!=null?'US$ '+fmt(b.pn_usd/1000,1)+'k':'');
+  $('rows-deudores').innerHTML = (b.clientes||[]).map(c =>
+    `<div class="kv"><span><span style="font-size:13px; color:var(--text); display:block;">${c.nombre}</span><span style="font-size:10.5px; color:var(--faint);">${c.fecha?'act. '+c.fecha:''}</span></span><span class="v mono">$${fmt(c.ars)}</span></div>`).join('') || '<div class="c-sub">Sin datos de clientes</div>';
+
+  const peds = (S.telas.compras && S.telas.compras.pedidos) || [];
+  $('telas-nped').textContent = peds.length + ' pendientes';
+  const colEstado = e => /TRANSITO/i.test(e) ? 'var(--accent)' : /SIN CONF/i.test(e) ? 'var(--warn)' : 'var(--pos)';
+  $('rows-pedidos').innerHTML = peds.map(p => `<div class="row">
+    <div class="nm">
+      <div class="t">#${p.pedido}${p.factura?' · '+p.factura:''} → ${p.destino||'—'}</div>
+      <div class="s">${p.articulo||''} · <span style="color:${colEstado(p.estado)}; font-weight:600;">${p.estado}</span></div>
+    </div>
+    <div class="pr"><div class="v mono">${p.pedida!=null?fmt(p.pedida):'—'} m</div><div class="d mono" style="color:var(--faint)">entreg. ${p.entregada!=null?fmt(p.entregada):'0'}</div></div>
+  </div>`).join('') || '<div class="c-sub" style="padding:8px 0;">Sin pedidos pendientes</div>';
 }
+async function intentarDesbloqueo() {
+  const clave = $('telas-clave').value;
+  if (!clave) return;
+  try {
+    S.telas = await descifrarTelas(clave);
+    telasClave = clave;
+    try { localStorage.setItem('tablero-telas-clave', clave); } catch(e) {}
+    $('telas-err').style.display = 'none';
+    renderTelas();
+  } catch(e) {
+    $('telas-err').style.display = 'block';
+  }
+}
+document.addEventListener('click', e => {
+  if (e.target && e.target.id === 'telas-unlock') intentarDesbloqueo();
+  if (e.target && e.target.id === 'telas-relock') {
+    S.telas = null; telasClave = null;
+    try { localStorage.removeItem('tablero-telas-clave'); } catch(e2) {}
+    renderTelas();
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'telas-clave') intentarDesbloqueo();
+});
 
 /* ================= Alertas ================= */
 function evaluarAlertas() {
