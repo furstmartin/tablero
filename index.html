@@ -31,7 +31,7 @@
   body{
     background:var(--bg); color:var(--text);
     font-family:'IBM Plex Sans',system-ui,sans-serif;
-    padding-bottom:calc(74px + env(safe-area-inset-bottom));
+    padding-bottom:calc(110px + env(safe-area-inset-bottom));
     -webkit-tap-highlight-color:transparent;
   }
   .mono{ font-family:'IBM Plex Mono',monospace; }
@@ -269,6 +269,21 @@
       <div class="c-title" style="padding:10px 0 4px;">Energía, algodón y tasas</div>
       <div id="rows-energia"></div>
     </div>
+
+    <div class="card">
+      <div class="c-head"><div class="c-title">Bonos USA — rendimientos</div><span class="c-tag mono" id="ust-fecha"></span></div>
+      <div class="legend" style="margin-top:8px; margin-bottom:6px;">
+        <span><span class="ln" style="background:var(--accent);"></span>10 años</span>
+        <span><span class="ln" style="background:var(--muted);"></span>2 años</span>
+      </div>
+      <div id="chart-ust"></div>
+    </div>
+
+    <div class="card">
+      <div class="c-head"><div class="c-title">Riesgo país y bonos argentinos</div><span class="c-tag mono">90d</span></div>
+      <div id="chart-riesgo" style="margin-top:10px;"></div>
+      <div id="rows-bonos-arg"></div>
+    </div>
     <div class="note info" id="note-fuentes"></div>
   </section>
 
@@ -293,7 +308,7 @@
     <div class="grid2" id="g-hacienda"></div>
     <div class="card">
       <div class="c-head">
-        <div class="c-title">Lluvias — zona Pergamino</div>
+        <div class="c-title">Lluvias — La Sarita, Santa Fe</div>
         <span class="c-tag mono">Open-Meteo</span>
       </div>
       <div class="c-sub">mm/día · 7 días + pronóstico 7</div>
@@ -308,7 +323,7 @@
       <div class="c-title" style="padding:10px 0 4px;">Insumos</div>
       <div id="rows-insumos"></div>
     </div>
-    <div class="note info">El índice novillo (MAG Cañuelas), insumos y arrendamientos todavía son de demostración — estamos buscando fuente pública. Pasame las coordenadas del campo para ajustar las lluvias.</div>
+    <div class="note info">El índice novillo (MAG Cañuelas), insumos y arrendamientos todavía son de demostración — estamos buscando fuente pública. Lluvias medidas en La Sarita, Santa Fe.</div>
   </section>
 
   <!-- ============ TELAS ============ -->
@@ -471,7 +486,7 @@ async function cargarTodo() {
         S.dolarHist = S._hm.map(x => ({ fecha:x.fecha, mayorista:x.venta, blue:idx[x.fecha] }));
       });
     }),
-    j('https://api.open-meteo.com/v1/forecast?latitude=-33.89&longitude=-60.57&daily=precipitation_sum&past_days=7&forecast_days=7&timezone=America%2FArgentina%2FBuenos_Aires').then(d => S.lluvia = d.daily),
+    j('https://api.open-meteo.com/v1/forecast?latitude=-28.9711&longitude=-59.8489&daily=precipitation_sum&past_days=7&forecast_days=7&timezone=America%2FArgentina%2FBuenos_Aires').then(d => S.lluvia = d.daily),
     fetch('datos.json?v=' + Date.now()).then(r => r.ok ? r.json() : null).then(d => { if (d) S.ext = d; }).catch(()=>{}),
   ];
   const rs = await Promise.allSettled(tareas);
@@ -524,7 +539,10 @@ function renderResumen() {
   kpis.push({ lbl:'Mayorista', unit:'$', val: dM?fmt(dM.venta):'…', d:dltM, sp: mayArr.slice(-8), spc: dltM.color });
   const dltBr = deltaPP(brechaArr.at(-1), brechaArr.at(-2));
   kpis.push({ lbl:'Brecha', unit:'', val: S.vals.brecha?fmt(S.vals.brecha.v,1)+'%':'…', d:dltBr, sp: brechaArr.slice(-8), spc: dltBr.color });
-  kpis.push({ lbl:'Riesgo país', unit:'', val: S.vals.riesgo?fmt(S.vals.riesgo.valor)+' pb':'…', d:{txt: S.vals.riesgo? S.vals.riesgo.fecha : '', color:MUT}, sp:null });
+  const rsSerie = ((S.ext && S.ext.riesgo_serie) || []).map(x=>x.valor);
+  const dltR = rsSerie.length>1 ? deltaPP(rsSerie.at(-1), rsSerie.at(-2), true) : {txt: S.vals.riesgo? S.vals.riesgo.fecha : '', color:MUT};
+  if (dltR.txt && dltR.txt.includes('pp')) dltR.txt = dltR.txt.replace(' pp','').replace('pp','pb');
+  kpis.push({ lbl:'Riesgo país', unit:'', val: S.vals.riesgo?fmt(S.vals.riesgo.valor)+' pb':'…', d:dltR, sp: rsSerie.slice(-10), spc: dltR.color });
   const dltI = deltaPP(ipcArr.at(-1), ipcArr.at(-2));
   kpis.push({ lbl:'IPC mensual', unit:'', val: ipcArr.length?fmt(ipcArr.at(-1),1)+'%':'…', d:dltI, sp: ipcArr.slice(-8), spc: dltI.color });
   kpis.push({ lbl:'Soja Rosario', unit:'US$', val: S.vals.soja_ros_usd?fmt(S.vals.soja_ros_usd.v):'…', d:{txt: S.ext&&S.ext.granos_ros?('pizarra '+(S.ext.granos_ros.fecha||'')):'', color:MUT}, sp:null });
@@ -549,6 +567,29 @@ function renderResumen() {
     $('ab-title').textContent = 'Todo en orden';
     $('ab-sub').textContent = 'Ninguna variable cruzó sus umbrales';
   }
+}
+
+/* ================= Chart genérico de series ================= */
+function dibujarSeries(elId, H, data, series, tipFn) {
+  const el = $(elId);
+  if (!data || data.length < 2) { el.innerHTML = '<div style="color:var(--faint);font-size:12px;">Cargando…</div>'; return; }
+  const W = 300, pad = 4;
+  const vals = data.flatMap(d => series.map(s => d[s.k])).filter(x => x != null);
+  const min = Math.min(...vals), max = Math.max(...vals), range = (max-min)||1;
+  const x = i => pad + (W-2*pad)*i/(data.length-1);
+  const y = v => H - pad - ((v-min)/range)*(H-2*pad);
+  const lines = series.map(s =>
+    `<polyline points="${data.map((d,i)=> d[s.k]!=null ? x(i).toFixed(1)+','+y(d[s.k]).toFixed(1) : null).filter(Boolean).join(' ')}"
+      fill="none" stroke="${s.color}" stroke-width="${s.w||2}" vector-effect="non-scaling-stroke" ${s.op?`opacity="${s.op}"`:''}/>`).join('');
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:${H}px;">${lines}
+    <rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/></svg>`;
+  const svg = el.querySelector('svg');
+  svg.addEventListener('mousemove', ev => {
+    const r = svg.getBoundingClientRect();
+    const i = Math.max(0, Math.min(data.length-1, Math.round((ev.clientX-r.left)/r.width*(data.length-1))));
+    showTip(tipFn(data[i]), ev);
+  });
+  svg.addEventListener('mouseleave', hideTip);
 }
 
 /* ================= Charts dólar ================= */
@@ -616,34 +657,59 @@ function renderMercados() {
     kv('IPC interanual (12 m)', inter!=null?fmt(inter,1)+'%':'…', {txt:'',color:MUT}) +
     kv('IPIM mayorista (último mes)', ipimU?fmt(ipimU.valor,1)+'%':'…', {txt: ipimU?mesLabel(ipimU.fecha):'', color:MUT});
 
-  // granos
+  // granos — precio en pesos + variación diaria + referencia USD
   const g = (S.ext && S.ext.granos_ros) || {};
   const may = v.dolar_mayorista ? v.dolar_mayorista.venta : null;
   const granoRow = (nombre, key) => {
-    const val = g[key];
+    const val = g[key], prev = g[key+'_prev'];
     const usd = (val!=null && may) ? Math.round(val/may) : null;
+    const dlt = deltaPct(val, prev);
     return `<div class="row">
-      <div class="nm"><div class="t">${nombre}</div><div class="s">${val!=null?'pizarra '+(g.fecha||''):(g.fecha?'sin cotización':'cargando')}</div></div>
-      <div class="pr"><div class="v mono">${val!=null?'$'+fmt(Math.round(val/1000))+'k':'S/C'}</div><div class="d mono" style="color:var(--faint)">${usd?'US$ '+usd+'/t':''}</div></div>
+      <div class="nm"><div class="t">${nombre}</div><div class="s">$/t · pizarra ${g.fecha||''}</div></div>
+      <div class="pr" style="min-width:110px;"><div class="v mono">${val!=null?'$'+fmt(val):'S/C'}</div>
+      <div class="d mono">${dlt.txt?`<span style="color:${dlt.color}">${dlt.txt}</span>`:''}${usd?`<span style="color:var(--faint)">${dlt.txt?' · ':''}US$ ${usd}/t</span>`:''}</div></div>
     </div>`;
   };
   $('rows-granos').innerHTML = granoRow('Soja','soja') + granoRow('Trigo','trigo') + granoRow('Maíz','maiz') + granoRow('Girasol','girasol') + granoRow('Sorgo','sorgo');
 
-  // energia y tasas
+  // energia y tasas — con variación vs día anterior
   const f = (S.ext && S.ext.futuros) || {};
   const b = (S.ext && S.ext.bonos_usa) || {};
+  const dpct = (p, badUp=false) => p==null ? {txt:'',color:MUT} :
+    { txt:(p>=0?'▲ ':'▼ ')+fmt(Math.abs(p),1)+'%', color: Math.abs(p)<0.05?MUT:((badUp? p<0 : p>=0)?POS:NEG) };
+  const serieU = b.serie || [];
+  const dY = (k) => serieU.length>1 ? deltaPP(serieU.at(-1)[k], serieU.at(-2)[k]) : {txt:'',color:MUT};
   $('rows-energia').innerHTML =
-    kv('Petróleo WTI', f.wti!=null?'US$ '+fmt(f.wti,1):'…') +
-    kv('Petróleo Brent', f.brent!=null?'US$ '+fmt(f.brent,1):'…') +
-    kv('Algodón ICE (¢/lb)', f.algodon!=null?fmt(f.algodon,1):'…') +
-    kv('Soja Chicago (US$/t)', f.soja_cbot!=null?fmt(f.soja_cbot):'…') +
-    kv('Maíz Chicago (US$/t)', f.maiz_cbot!=null?fmt(f.maiz_cbot):'…') +
-    kv('Trigo Chicago (US$/t)', f.trigo_cbot!=null?fmt(f.trigo_cbot):'…') +
-    kv('Bono USA 10 años', b.y10!=null?fmt(b.y10,2)+'%':'…') +
-    kv('Bono USA 2 años', b.y2!=null?fmt(b.y2,2)+'%':'…') +
+    kv('Petróleo WTI', f.wti!=null?'US$ '+fmt(f.wti,1):'…', dpct(f.wti_pct)) +
+    kv('Petróleo Brent', f.brent!=null?'US$ '+fmt(f.brent,1):'…', dpct(f.brent_pct)) +
+    kv('Algodón ICE (¢/lb)', f.algodon!=null?fmt(f.algodon,1):'…', dpct(f.algodon_pct)) +
+    kv('Soja Chicago (US$/t)', f.soja_cbot!=null?fmt(f.soja_cbot):'…', dpct(f.soja_cbot_pct)) +
+    kv('Maíz Chicago (US$/t)', f.maiz_cbot!=null?fmt(f.maiz_cbot):'…', dpct(f.maiz_cbot_pct)) +
+    kv('Trigo Chicago (US$/t)', f.trigo_cbot!=null?fmt(f.trigo_cbot):'…', dpct(f.trigo_cbot_pct)) +
     kv('Plazo fijo TNA (BNA)', v.pf_tna?fmt(v.pf_tna.v,1)+'%':'…') +
     kv('Real (USD/BRL)', v.usd_brl?'R$ '+fmt(v.usd_brl.v,2):'…') +
     kv('Real vs peso (BRL/ARS)', v.brl_ars?'$'+fmt(v.brl_ars.venta,1):'…');
+
+  // bonos USA — serie de rendimientos
+  $('ust-fecha').textContent = b.fecha || '';
+  dibujarSeries('chart-ust', 96, serieU, [
+    { k:'y10', color:'var(--accent)', w:2.4 },
+    { k:'y2', color:'var(--muted)', w:2, op:.7 },
+  ], (d) => `<b>${d.fecha}</b><br>10a ${d.y10?.toFixed(2)}%<br>2a ${d.y2?.toFixed(2)}%`);
+
+  // riesgo país + bonos argentinos
+  const rs = (S.ext && S.ext.riesgo_serie) || [];
+  dibujarSeries('chart-riesgo', 84, rs, [ { k:'valor', color:'var(--accent)', w:2.4 } ],
+    (d) => `<b>${d.fecha}</b><br>${d.valor} pb`);
+  const ba = (S.ext && S.ext.bonos_arg) || {};
+  const bonoRow = (nombre, o) => {
+    if (!o || o.ultimo==null) return kv(nombre, '…');
+    const dlt = deltaPct(o.ultimo, o.prev);
+    return kv(nombre + ' ($)', fmt(o.ultimo/1000,1)+'k', dlt);
+  };
+  $('rows-bonos-arg').innerHTML =
+    kv('Riesgo país', v.riesgo?fmt(v.riesgo.valor)+' pb':'…', {txt: rs.length>1?deltaPP(rs.at(-1).valor, rs.at(-2).valor, true).txt.replace('pp',''):'', color: rs.length>1?deltaPP(rs.at(-1).valor, rs.at(-2).valor, true).color:MUT}) +
+    bonoRow('AL30', ba.AL30) + bonoRow('GD30', ba.GD30);
 
   const act = S.ext ? new Date(S.ext.actualizado).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : null;
   $('note-fuentes').innerHTML = act
