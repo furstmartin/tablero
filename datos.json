@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-07-23T18:57:03Z",
+ "actualizado": "2026-07-23T19:48:59Z",
  "granos_ros": {
   "fecha": "22/07/2026",
   "moneda": "ARS/t",
@@ -10,8 +10,8 @@
   "maiz": 280100.0
  },
  "futuros": {
-  "wti": 92.05,
-  "brent": 100.6,
+  "wti": 91.75,
+  "brent": 100.02,
   "algodon": 81.29,
   "soja_cbot": 456.0,
   "maiz_cbot": 191.6,
