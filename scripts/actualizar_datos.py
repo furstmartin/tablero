@@ -30,16 +30,18 @@ def pizarra_rosario():
     fechas = [t for t in ths if re.match(r"\d{2}/\d{2}/\d{4}", t)]
     tds = [re.sub(r"<[^>]+>", "", t).strip() for t in re.findall(r"<td[^>]*>(.*?)</td>", h, re.S)]
     tds = [t for t in tds if t]
-    out = {"fecha": fechas[0] if fechas else None, "moneda": "ARS/t"}
+    out = {"fecha": fechas[0] if fechas else None, "fecha_prev": fechas[1] if len(fechas) > 1 else None, "moneda": "ARS/t"}
     nombres = {"Soja": "soja", "Trigo": "trigo", "Maíz": "maiz", "Girasol": "girasol", "Sorgo": "sorgo"}
+    def precio(txt):
+        m = re.search(r"([\d\.]+,\d+|[\d\.]+)", txt)
+        return float(m.group(1).replace(".", "").replace(",", ".")) if m else None
     i = 0
     while i < len(tds):
         if tds[i] in nombres:
             clave = nombres[tds[i]]
-            # tds[i+1] es el nombre en inglés; tds[i+2] es el precio más reciente
-            precio = tds[i + 2] if i + 2 < len(tds) else "S/C"
-            m = re.search(r"([\d\.]+,\d+|[\d\.]+)", precio)
-            out[clave] = float(m.group(1).replace(".", "").replace(",", ".")) if m else None
+            # tds[i+1] nombre en inglés; tds[i+2] precio más reciente; tds[i+3] día anterior
+            out[clave] = precio(tds[i + 2]) if i + 2 < len(tds) else None
+            out[clave + "_prev"] = precio(tds[i + 3]) if i + 3 < len(tds) else None
             i += 7
         else:
             i += 1
@@ -69,14 +71,20 @@ def cnbc():
            "?symbols=%40CL.1%7C%40BZ.1%7C%40CT.1%7C%40S.1%7C%40C.1%7C%40W.1"
            "&requestMethod=itv&noform=1&partnerId=2&fund=1&exthrs=1&output=json")
     d = json.loads(get(url))
-    q = {x["symbol"]: float(x["last"].replace(",", "")) for x in d["FormattedQuoteResult"]["FormattedQuote"] if x.get("last")}
+    q, pct = {}, {}
+    for x in d["FormattedQuoteResult"]["FormattedQuote"]:
+        if x.get("last"):
+            q[x["symbol"]] = float(x["last"].replace(",", ""))
+        if x.get("change_pct"):
+            m = re.search(r"([+-]?[\d\.]+)", x["change_pct"])
+            if m: pct[x["symbol"]] = float(m.group(1))
     return {
-        "wti": q.get("@CL.1"),
-        "brent": q.get("@BZ.1"),
-        "algodon": q.get("@CT.1"),                                       # ¢/lb
-        "soja_cbot": round(q["@S.1"] * F_SOJA, 1) if q.get("@S.1") else None,
-        "maiz_cbot": round(q["@C.1"] * F_MAIZ, 1) if q.get("@C.1") else None,
-        "trigo_cbot": round(q["@W.1"] * F_MAIZ, 1) if q.get("@W.1") else None,
+        "wti": q.get("@CL.1"), "wti_pct": pct.get("@CL.1"),
+        "brent": q.get("@BZ.1"), "brent_pct": pct.get("@BZ.1"),
+        "algodon": q.get("@CT.1"), "algodon_pct": pct.get("@CT.1"),      # ¢/lb
+        "soja_cbot": round(q["@S.1"] * F_SOJA, 1) if q.get("@S.1") else None, "soja_cbot_pct": pct.get("@S.1"),
+        "maiz_cbot": round(q["@C.1"] * F_MAIZ, 1) if q.get("@C.1") else None, "maiz_cbot_pct": pct.get("@C.1"),
+        "trigo_cbot": round(q["@W.1"] * F_MAIZ, 1) if q.get("@W.1") else None, "trigo_cbot_pct": pct.get("@W.1"),
     }
 
 def futuros():
@@ -97,18 +105,48 @@ def futuros():
     if out["trigo_cbot"]: out["trigo_cbot"] = round(out["trigo_cbot"] * F_MAIZ, 1)
     return out
 
-# ---------- Bonos USA (Tesoro, rendimientos) ----------
+# ---------- Bonos USA (Tesoro, rendimientos + serie) ----------
 def bonos_usa():
-    mes = datetime.date.today().strftime("%Y%m")
-    url = ("https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml"
-           f"?data=daily_treasury_yield_curve&field_tdr_date_value_month={mes}")
-    x = get(url)
-    y2 = re.findall(r"<d:BC_2YEAR[^>]*>([\d\.]+)</d:BC_2YEAR>", x)
-    y10 = re.findall(r"<d:BC_10YEAR[^>]*>([\d\.]+)</d:BC_10YEAR>", x)
-    fechas = re.findall(r"<d:NEW_DATE[^>]*>([^<]+)</d:NEW_DATE>", x)
-    return {"y2": float(y2[-1]) if y2 else None,
-            "y10": float(y10[-1]) if y10 else None,
-            "fecha": fechas[-1][:10] if fechas else None}
+    hoy = datetime.date.today()
+    mes_ant = (hoy.replace(day=1) - datetime.timedelta(days=1)).strftime("%Y%m")
+    serie = []
+    for mes in (mes_ant, hoy.strftime("%Y%m")):
+        url = ("https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml"
+               f"?data=daily_treasury_yield_curve&field_tdr_date_value_month={mes}")
+        try:
+            x = get(url)
+        except Exception:
+            continue
+        y2s = re.findall(r"<d:BC_2YEAR[^>]*>([\d\.]+)</d:BC_2YEAR>", x)
+        y10s = re.findall(r"<d:BC_10YEAR[^>]*>([\d\.]+)</d:BC_10YEAR>", x)
+        fchs = re.findall(r"<d:NEW_DATE[^>]*>([^<]+)</d:NEW_DATE>", x)
+        for f, a, b in zip(fchs, y2s, y10s):
+            serie.append({"fecha": f[:10], "y2": float(a), "y10": float(b)})
+    serie = serie[-25:]
+    ult = serie[-1] if serie else {}
+    return {"y2": ult.get("y2"), "y10": ult.get("y10"), "fecha": ult.get("fecha"), "serie": serie}
+
+# ---------- Riesgo país (serie últimos 90 días) ----------
+def riesgo_serie():
+    d = json.loads(get("https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais"))
+    return d[-90:]
+
+# ---------- Bonos argentinos (MatbaRofex spot) ----------
+def bonos_arg():
+    hoy = datetime.date.today()
+    desde = (hoy - datetime.timedelta(days=40)).isoformat()
+    out = {}
+    for spot in ("AL30", "GD30"):
+        try:
+            d = json.loads(get(f"https://apicem.matbarofex.com.ar/api/v2/spot-prices?spot={spot}&from={desde}&to={hoy.isoformat()}"))
+            pts = [{"fecha": x["dateTime"][:10], "v": x["price"]} for x in d["data"] if x.get("price")]
+            out[spot] = {"serie": pts[-30:], "ultimo": pts[-1]["v"] if pts else None,
+                         "prev": pts[-2]["v"] if len(pts) > 1 else None,
+                         "fecha": pts[-1]["fecha"] if pts else None}
+        except Exception as e:
+            print(f"[aviso] bonos_arg {spot}: {e}", file=sys.stderr)
+            out[spot] = None
+    return out
 
 # ---------- IPIM (inflación mayorista, INDEC vía datos.gob.ar) ----------
 def ipim():
@@ -130,6 +168,8 @@ def main():
         "granos_ros": intento(pizarra_rosario),
         "futuros": intento(futuros),
         "bonos_usa": intento(bonos_usa),
+        "riesgo_serie": intento(riesgo_serie),
+        "bonos_arg": intento(bonos_arg),
         "ipim": intento(ipim),
         "novillo": None,  # fuente MAG pendiente
     }
