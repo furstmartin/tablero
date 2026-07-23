@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0d0d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Tablero Tincho</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:           #f9f9f7;
+    --surface-1:      #fcfcfb;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1:       #2a78d6;
+    --series-2:       #008300;
+    --series-seq-250: #86b6ef;
+    --status-good:    #0ca30c;
+    --status-warn:    #fab219;
+    --status-serious: #ec835a;
+    --status-crit:    #d03b3b;
+    --delta-good:     #006300;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page:           #0d0d0d;
+      --surface-1:      #1a1a19;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-1:       #3987e5;
+      --series-2:       #008300;
+      --series-seq-250: #184f95;
+      --delta-good:     #0ca30c;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--text-primary);
+    padding-bottom: 76px;
+  }
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--page);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  header .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .btn {
+    border: 1px solid var(--border); background: var(--surface-1);
+    color: var(--text-primary); border-radius: 8px; padding: 7px 12px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .btn:active { opacity: .7; }
+  main { max-width: 760px; margin: 0 auto; padding: 14px 12px 24px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  h2.section {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--text-muted); margin: 18px 4px 8px; font-weight: 700;
+  }
+  h2.section:first-child { margin-top: 2px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 8px; }
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 12px 10px; position: relative;
+  }
+  .card .lbl { font-size: 11.5px; color: var(--text-secondary); line-height: 1.25; min-height: 28px; padding-right: 52px; }
+  .card .val { font-size: 22px; font-weight: 700; margin-top: 4px; letter-spacing: -0.01em; }
+  .card .val small { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+  .card .sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+  .card .delta-up   { color: var(--delta-good); font-weight: 600; }
+  .card .delta-down { color: var(--status-crit); font-weight: 600; }
+  .badge {
+    position: absolute; top: 9px; right: 9px;
+    font-size: 9px; font-weight: 700; letter-spacing: .05em;
+    padding: 2px 6px; border-radius: 20px; text-transform: uppercase;
+  }
+  .badge.live { color: var(--delta-good); background: color-mix(in srgb, var(--status-good) 12%, transparent); }
+  .badge.demo { color: var(--text-muted); background: color-mix(in srgb, var(--text-muted) 14%, transparent); }
+  .chart-card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px; margin-top: 8px;
+  }
+  .chart-card h3 { font-size: 13.5px; font-weight: 700; }
+  .chart-card .csub { font-size: 11px; color: var(--text-muted); margin-top: 2px; margin-bottom: 8px; }
+  .legend { display: flex; gap: 14px; font-size: 11px; color: var(--text-secondary); margin: 4px 0 6px; flex-wrap: wrap; }
+  .legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  details.tbl { margin-top: 8px; font-size: 12px; }
+  details.tbl summary { color: var(--text-muted); cursor: pointer; font-size: 11px; }
+  details.tbl table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  details.tbl th, details.tbl td { text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  details.tbl th:first-child, details.tbl td:first-child { text-align: left; }
+  details.tbl th { color: var(--text-muted); font-weight: 600; }
+  .sys-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 11px 12px; margin-bottom: 6px;
+  }
+  .sys-row .nm { font-size: 13px; font-weight: 600; }
+  .sys-row .mx { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .pill { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .pill.ok   { color: var(--delta-good);  background: color-mix(in srgb, var(--status-good) 12%, transparent); }
+  .pill.deg  { color: var(--status-serious); background: color-mix(in srgb, var(--status-serious) 14%, transparent); }
+  .pill.down { color: var(--status-crit); background: color-mix(in srgb, var(--status-crit) 14%, transparent); }
+  .alert-row {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-left: 4px solid var(--baseline);
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; font-size: 12.5px;
+  }
+  .alert-row.crit { border-left-color: var(--status-crit); }
+  .alert-row.warn { border-left-color: var(--status-warn); }
+  .alert-row .ic { font-size: 15px; line-height: 1.2; }
+  .alert-row .tt { font-weight: 700; }
+  .alert-row .dd { color: var(--text-secondary); margin-top: 2px; }
+  .rule-row {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 10px; padding: 9px 12px; margin-bottom: 6px; font-size: 12.5px;
+  }
+  .rule-row .rl { flex: 1; }
+  .rule-row .rl .nm { font-weight: 600; }
+  .rule-row .rl .cur { font-size: 11px; color: var(--text-muted); margin-top: 1px; font-variant-numeric: tabular-nums; }
+  .rule-row input[type=number] {
+    width: 84px; padding: 6px 8px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--page);
+    color: var(--text-primary); font-size: 13px; text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .rule-row .op { font-size: 12px; color: var(--text-muted); }
+  .note {
+    font-size: 11.5px; color: var(--text-muted); background: var(--surface-1);
+    border: 1px dashed var(--border); border-radius: 10px; padding: 10px 12px; margin-top: 10px; line-height: 1.45;
+  }
+  nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
+    background: var(--surface-1); border-top: 1px solid var(--border);
+    display: flex; padding-bottom: env(safe-area-inset-bottom);
+  }
+  nav button {
+    flex: 1; background: none; border: none; cursor: pointer;
+    padding: 9px 2px 8px; color: var(--text-muted);
+    font-size: 10px; font-weight: 600; font-family: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    position: relative;
+  }
+  nav button.active { color: var(--series-1); }
+  nav button .nic { font-size: 19px; line-height: 1; }
+  nav button .abadge {
+    position: absolute; top: 4px; right: calc(50% - 22px);
+    background: var(--status-crit); color: #fff; font-size: 9px; font-weight: 700;
+    min-width: 15px; height: 15px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; padding: 0 4px;
+  }
+  #tooltip {
+    position: fixed; z-index: 50; pointer-events: none; display: none;
+    background: var(--text-primary); color: var(--page);
+    font-size: 11px; padding: 6px 9px; border-radius: 7px;
+    font-variant-numeric: tabular-nums; box-shadow: 0 3px 12px rgba(0,0,0,.25);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Tablero Tincho</h1>
+    <div class="sub" id="last-update">Cargando datos…</div>
+  </div>
+  <button class="btn" id="refresh-btn">Actualizar</button>
+</header>
+
+<main>
+  <!-- ============ MERCADOS ============ -->
+  <section class="tab-panel active" id="panel-mercados">
+    <h2 class="section">Dólar y tipo de cambio</h2>
+    <div class="grid" id="g-dolar"></div>
+    <div class="chart-card">
+      <h3>Dólar mayorista vs. blue</h3>
+      <div class="csub">Últimos 30 días hábiles · venta $/USD · fuente: ArgentinaDatos</div>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--series-1)"></span>Mayorista</span>
+        <span><span class="sw" style="background:var(--series-2)"></span>Blue</span>
+      </div>
+      <div id="chart-dolar"></div>
+      <details class="tbl"><summary>Ver tabla</summary><div id="tbl-dolar"></div></details>
+    </div>
+
+    <h2 class="section">Inflación Argentina</h2>
+    <div class="grid" id="g-inflacion"></div>
+    <div class="chart-card">
+      <h3>Inflación minorista (IPC) mensual</h3>
+      <div class="csub">Últimos 12 meses · variación % mensual · fuente: INDEC vía ArgentinaDatos</div>
+      <div id="chart-ipc"></div>
+      <details class="tbl"><summary>Ver tabla</summary><div id="tbl-ipc"></div></details>
+    </div>
+
+    <h2 class="section">Granos — Pizarra Rosario</h2>
+    <div class="grid" id="g-granos"></div>
+
+    <h2 class="section">Energía, algodón y tasas</h2>
+    <div class="grid" id="g-otros"></div>
+    <div class="note" id="note-mercados"></div>
+  </section>
+
+  <!-- ============ APORTO ============ -->
+  <section class="tab-panel" id="panel-aporto">
+    <h2 class="section">Estabilidad de sistemas</h2>
+    <div id="g-sistemas"></div>
+
+    <h2 class="section">Métricas comerciales (hoy)</h2>
+    <div class="grid" id="g-aporto-com"></div>
+
+    <h2 class="section">Económicas y financieras</h2>
+    <div class="grid" id="g-aporto-fin"></div>
+
+    <h2 class="section">Apolito</h2>
+    <div class="grid" id="g-apolito"></div>
+
+    <h2 class="section">Pocho</h2>
+    <div class="grid" id="g-pocho"></div>
+    <div class="note">Estas métricas son <b>de demostración</b>. El paso siguiente es conectarlas a la base de datos / API de Aporto (solo lectura). Cuando me pases los accesos o el detalle de los endpoints, esta solapa pasa a datos reales.</div>
+  </section>
+
+  <!-- ============ CAMPO ============ -->
+  <section class="tab-panel" id="panel-campo">
+    <h2 class="section">Hacienda</h2>
+    <div class="grid" id="g-hacienda"></div>
+
+    <h2 class="section">Granos — Pizarra Rosario</h2>
+    <div class="grid" id="g-granos-campo"></div>
+
+    <h2 class="section">Insumos</h2>
+    <div class="grid" id="g-insumos"></div>
+
+    <h2 class="section">Lluvias — zona del campo</h2>
+    <div class="chart-card">
+      <h3>Precipitaciones</h3>
+      <div class="csub" id="lluvia-sub">7 días pasados + pronóstico 7 días · mm/día · fuente: Open-Meteo</div>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--series-1)"></span>Registrado</span>
+        <span><span class="sw" style="background:var(--series-seq-250)"></span>Pronóstico</span>
+      </div>
+      <div id="chart-lluvia"></div>
+      <details class="tbl"><summary>Ver tabla</summary><div id="tbl-lluvia"></div></details>
+    </div>
+    <div class="note">La ubicación está fijada de forma provisoria en zona Pergamino. Pasame las coordenadas (o el nombre del partido) del campo y la ajusto; también puedo sumar más de un lote.</div>
+  </section>
+
+  <!-- ============ TELAS ============ -->
+  <section class="tab-panel" id="panel-telas">
+    <h2 class="section">Variables de importación (Brasil)</h2>
+    <div class="grid" id="g-telas-fx"></div>
+
+    <h2 class="section">Cuentas corrientes de clientes</h2>
+    <div class="chart-card">
+      <h3>Resumen de cuentas corrientes</h3>
+      <div class="csub">Datos de demostración — se vinculará a tus planillas de Google Sheets</div>
+      <div id="tbl-ctacte"></div>
+    </div>
+    <div class="note">Cuando quieras, conectamos esta solapa a tus tableros de Google Sheets (cuentas corrientes de clientes, stock por artículo denim/gabardina, pedidos en tránsito desde Brasil). Solo necesito que me compartas las planillas.</div>
+  </section>
+
+  <!-- ============ ALERTAS ============ -->
+  <section class="tab-panel" id="panel-alertas">
+    <h2 class="section">Alertas activas</h2>
+    <div id="g-alertas-activas"></div>
+
+    <h2 class="section">Reglas — triggers de seguridad</h2>
+    <div id="g-reglas"></div>
+    <div class="note">Los umbrales se editan acá y se evalúan en cada actualización (cada 60 segundos). En la versión final: los umbrales quedan guardados, y además configuramos avisos <b>push al celular o por email aunque la app esté cerrada</b>, mediante un vigilante programado.</div>
+  </section>
+</main>
+
+<nav id="tabbar">
+  <button data-tab="mercados" class="active"><span class="nic">📈</span>Mercados</button>
+  <button data-tab="aporto"><span class="nic">💳</span>Aporto</button>
+  <button data-tab="campo"><span class="nic">🌾</span>Campo</button>
+  <button data-tab="telas"><span class="nic">🧵</span>Telas</button>
+  <button data-tab="alertas" id="tab-alertas"><span class="nic">🔔</span>Alertas</button>
+</nav>
+
+<div id="tooltip"></div>
+
+<script>
+"use strict";
+/* ================= Estado ================= */
+const S = {
+  vals: {},          // clave -> {v, sub, live}
+  ipc: [],           // [{fecha, valor}] últimos 12
+  dolarHist: [],     // [{fecha, mayorista, blue}]
+  lluvia: null,      // open-meteo
+  alerts: [],
+  rules: [
+    { id:'rp',    key:'riesgo_pais',   nombre:'Riesgo país',              op:'>', th:700,  unidad:'pb',    sev:'crit' },
+    { id:'blue',  key:'blue_venta',    nombre:'Dólar blue (venta)',       op:'>', th:1700, unidad:'$',     sev:'warn' },
+    { id:'brecha',key:'brecha',        nombre:'Brecha blue/mayorista',    op:'>', th:15,   unidad:'%',     sev:'warn' },
+    { id:'brl',   key:'usd_brl',       nombre:'Real fuerte (USD/BRL)',    op:'<', th:4.8,  unidad:'R$',    sev:'warn' },
+    { id:'ipc',   key:'ipc_ultimo',    nombre:'Inflación mensual IPC',    op:'>', th:3,    unidad:'%',     sev:'warn' },
+    { id:'soja',  key:'soja_ros',      nombre:'Soja Rosario',             op:'<', th:280,  unidad:'USD/t', sev:'warn' },
+    { id:'nov',   key:'novillo',       nombre:'Índice novillo MAG',       op:'<', th:3200, unidad:'$/kg',  sev:'warn' },
+    { id:'upt',   key:'aporto_uptime', nombre:'Uptime sistemas Aporto',   op:'<', th:99.5, unidad:'%',     sev:'crit' },
+    { id:'mora',  key:'aporto_mora30', nombre:'Mora >30 días Aporto',     op:'>', th:8,    unidad:'%',     sev:'crit' },
+  ],
+};
+
+const fmt  = (n, d=0) => n==null ? '—' : n.toLocaleString('es-AR', {minimumFractionDigits:d, maximumFractionDigits:d});
+const $    = id => document.getElementById(id);
+const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+/* ================= Datos demo (fuente pendiente) ================= */
+const DEMO = {
+  soja_ros: 292, maiz_ros: 178, trigo_ros: 205, girasol_ros: 330,
+  soja_cbot: 378,
+  wti: 68.4, brent: 71.9, algodon: 67.2,
+  ust10: 4.32, ust2: 3.95,
+  ipim: 1.8,
+  novillo: 3685, ternero: 4120, vaca_consumo: 2890,
+  urea: 618, fosfato: 745,
+  arrendamiento: 18,
+};
+
+const APORTO = {
+  sistemas: [
+    { nombre:'API Core',         uptime:99.98, lat:142, err:0 },
+    { nombre:'App Clientes',     uptime:99.95, lat:310, err:2 },
+    { nombre:'Motor de Scoring', uptime:100.0, lat:88,  err:0 },
+    { nombre:'Apolito',          uptime:99.91, lat:236, err:1 },
+    { nombre:'Pocho',            uptime:99.99, lat:184, err:0 },
+  ],
+  com: { solicitudes:142, aprobadas:87, tasa:61.3, orig_hoy:18.4, orig_mes:312, ticket:215 },
+  fin: { cartera:2840, mora30:6.2, mora90:2.8, cobranza:24.1, spread:18.5 },
+  apolito: { conversaciones:1240, altas:96, conversion:7.7 },
+  pocho: { consultas:860, gestiones:132, efectividad:15.3 },
+};
+
+const CTACTE = [
+  { cliente:'Textil San Justo SRL',  saldo: 48200, vencido: 12400, dias: 18 },
+  { cliente:'Confecciones Norte',    saldo: 35750, vencido: 0,     dias: 0  },
+  { cliente:'Denim Center SA',       saldo: 29900, vencido: 8100,  dias: 32 },
+  { cliente:'Moda Sur Distribuidora',saldo: 18300, vencido: 0,     dias: 0  },
+  { cliente:'Tejidos del Litoral',   saldo: 12650, vencido: 4200,  dias: 45 },
+];
+
+/* ================= Fetch de datos en vivo ================= */
+async function j(url) { const r = await fetch(url); if (!r.ok) throw new Error(url); return r.json(); }
+
+async function cargarTodo() {
+  const tareas = [
+    j('https://dolarapi.com/v1/dolares').then(ds => {
+      for (const d of ds) S.vals['dolar_'+d.casa] = d;
+      const may = ds.find(d=>d.casa==='mayorista'), blue = ds.find(d=>d.casa==='blue');
+      if (may && blue) S.vals.brecha = { v: (blue.venta/may.venta - 1) * 100 };
+    }),
+    j('https://dolarapi.com/v1/cotizaciones/brl').then(d => S.vals.brl_ars = d),
+    j('https://api.frankfurter.dev/v1/latest?base=USD&symbols=BRL').then(d => S.vals.usd_brl = { v: d.rates.BRL, fecha: d.date }),
+    j('https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo').then(d => S.vals.riesgo = d),
+    j('https://api.argentinadatos.com/v1/finanzas/indices/inflacion').then(serie => { S.ipc = serie.slice(-12); }),
+    j('https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo').then(bs => {
+      const bn = bs.find(b => /NACION/i.test(b.entidad)) || bs[0];
+      if (bn && bn.tnaClientes) S.vals.pf_tna = { v: bn.tnaClientes * 100, entidad: bn.entidad };
+    }),
+    j('https://api.argentinadatos.com/v1/cotizaciones/dolares/mayorista').then(h => {
+      S._histMay = h.slice(-30);
+      return j('https://api.argentinadatos.com/v1/cotizaciones/dolares/blue').then(hb => {
+        const idx = Object.fromEntries(hb.map(x => [x.fecha, x.venta]));
+        S.dolarHist = S._histMay.map(x => ({ fecha: x.fecha, mayorista: x.venta, blue: idx[x.fecha] }));
+      });
+    }),
+    j('https://api.open-meteo.com/v1/forecast?latitude=-33.89&longitude=-60.57&daily=precipitation_sum&past_days=7&forecast_days=7&timezone=America%2FArgentina%2FBuenos_Aires').then(d => S.lluvia = d.daily),
+  ];
+  const rs = await Promise.allSettled(tareas);
+  const fallas = rs.filter(r => r.status === 'rejected').length;
+  $('last-update').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}) +
+    (fallas ? ' · ' + fallas + ' fuente(s) sin responder' : ' · datos en vivo');
+  renderTodo();
+}
+
+/* ================= Cards ================= */
+function card(lbl, val, opts={}) {
+  const { sub='', live=false, unidad='' } = opts;
+  return `<div class="card">
+    <span class="badge ${live?'live':'demo'}">${live?'En vivo':'Demo'}</span>
+    <div class="lbl">${lbl}</div>
+    <div class="val">${val}${unidad?` <small>${unidad}</small>`:''}</div>
+    ${sub?`<div class="sub">${sub}</div>`:''}
+  </div>`;
+}
+
+function renderMercados() {
+  const d = S.vals;
+  const g1 = [];
+  const casas = [['mayorista','Dólar mayorista'],['oficial','Dólar minorista (oficial)'],['blue','Dólar blue'],['bolsa','Dólar MEP'],['contadoconliqui','Dólar CCL']];
+  for (const [casa, nombre] of casas) {
+    const x = d['dolar_'+casa];
+    g1.push(card(nombre, x ? '$'+fmt(x.venta) : '…', { live: !!x, sub: x ? 'Compra $'+fmt(x.compra) : 'cargando' }));
+  }
+  g1.push(card('Brecha blue / mayorista', d.brecha ? fmt(d.brecha.v,1)+'%' : '…', { live: !!d.brecha }));
+  g1.push(card('Real brasileño (USD/BRL)', d.usd_brl ? 'R$ '+fmt(d.usd_brl.v,2) : '…', { live: !!d.usd_brl, sub:'clave para costo de telas' }));
+  g1.push(card('Real vs peso (BRL/ARS)', d.brl_ars ? '$'+fmt(d.brl_ars.venta,1) : '…', { live: !!d.brl_ars }));
+  $('g-dolar').innerHTML = g1.join('');
+
+  const ult = S.ipc.at(-1);
+  let inter = null;
+  if (S.ipc.length === 12) inter = (S.ipc.reduce((a,m)=>a*(1+m.valor/100),1)-1)*100;
+  if (ult) S.vals.ipc_ultimo = { v: ult.valor };
+  $('g-inflacion').innerHTML = [
+    card('Riesgo país', d.riesgo ? fmt(d.riesgo.valor) : '…', { live: !!d.riesgo, unidad:'pb', sub: d.riesgo ? d.riesgo.fecha : '' }),
+    card('IPC último mes (minorista)', ult ? fmt(ult.valor,1)+'%' : '…', { live: !!ult, sub: ult ? mesLabel(ult.fecha) : '' }),
+    card('IPC interanual (12 m)', inter!=null ? fmt(inter,1)+'%' : '…', { live: inter!=null, sub:'acumulado últimos 12 meses' }),
+    card('IPIM último mes (mayorista)', fmt(DEMO.ipim,1)+'%', { sub:'INDEC — fuente a conectar' }),
+    card('Plazo fijo TNA', d.pf_tna ? fmt(d.pf_tna.v,1)+'%' : '…', { live: !!d.pf_tna, sub:'Banco Nación · ref. tasas' }),
+  ].join('');
+
+  $('g-granos').innerHTML = granosCards();
+  $('g-otros').innerHTML = [
+    card('Petróleo WTI', fmt(DEMO.wti,1), { unidad:'USD/bbl' }),
+    card('Petróleo Brent', fmt(DEMO.brent,1), { unidad:'USD/bbl' }),
+    card('Algodón ICE', fmt(DEMO.algodon,1), { unidad:'¢/lb', sub:'referencia costo denim' }),
+    card('Bono USA 10 años', fmt(DEMO.ust10,2)+'%', { sub:'rendimiento' }),
+    card('Bono USA 2 años', fmt(DEMO.ust2,2)+'%', { sub:'rendimiento' }),
+    card('Soja Chicago (CBOT)', fmt(DEMO.soja_cbot), { unidad:'USD/t' }),
+  ].join('');
+  $('note-mercados').innerHTML = 'Las tarjetas marcadas <b>Demo</b> (granos pizarra Rosario, petróleo, algodón, bonos USA, IPIM) todavía no tienen fuente gratuita directa: se conectan en el paso siguiente mediante un actualizador automático que las refresca cada hora. Las marcadas <b>En vivo</b> ya son datos reales.';
+
+  DEMO_KEYS_TO_VALS();
+  dibujarChartDolar();
+  dibujarChartIPC();
+}
+
+function granosCards() {
+  return [
+    card('Soja Rosario', fmt(DEMO.soja_ros), { unidad:'USD/t', sub:'pizarra CAC' }),
+    card('Maíz Rosario', fmt(DEMO.maiz_ros), { unidad:'USD/t', sub:'pizarra CAC' }),
+    card('Trigo Rosario', fmt(DEMO.trigo_ros), { unidad:'USD/t', sub:'pizarra CAC' }),
+    card('Girasol Rosario', fmt(DEMO.girasol_ros), { unidad:'USD/t', sub:'pizarra CAC' }),
+  ].join('');
+}
+
+function DEMO_KEYS_TO_VALS() {
+  S.vals.soja_ros = { v: DEMO.soja_ros };
+  S.vals.novillo = { v: DEMO.novillo };
+  S.vals.aporto_uptime = { v: Math.min(...APORTO.sistemas.map(s=>s.uptime)) };
+  S.vals.aporto_mora30 = { v: APORTO.fin.mora30 };
+  if (S.vals.dolar_blue) S.vals.blue_venta = { v: S.vals.dolar_blue.venta };
+  if (S.vals.riesgo) S.vals.riesgo_pais = { v: S.vals.riesgo.valor };
+}
+
+function renderAporto() {
+  $('g-sistemas').innerHTML = APORTO.sistemas.map(s => {
+    const estado = s.uptime >= 99.9 ? ['ok','● Operativo'] : s.uptime >= 99 ? ['deg','▲ Degradado'] : ['down','✕ Caído'];
+    return `<div class="sys-row">
+      <div><div class="nm">${s.nombre}</div>
+      <div class="mx">uptime ${fmt(s.uptime,2)}% · latencia ${s.lat} ms · ${s.err} errores/h</div></div>
+      <span class="pill ${estado[0]}">${estado[1]}</span>
+    </div>`;
+  }).join('') + '<div class="note" style="margin-top:4px">Demo — se conecta a tu monitoreo real (API propia, Grafana, UptimeRobot, etc.)</div>';
+
+  const c = APORTO.com, f = APORTO.fin, a = APORTO.apolito, p = APORTO.pocho;
+  $('g-aporto-com').innerHTML = [
+    card('Solicitudes de crédito', fmt(c.solicitudes)),
+    card('Aprobadas', fmt(c.aprobadas), { sub:'tasa de aprobación '+fmt(c.tasa,1)+'%' }),
+    card('Originación hoy', '$'+fmt(c.orig_hoy,1)+' M'),
+    card('Originación del mes', '$'+fmt(c.orig_mes)+' M'),
+    card('Ticket promedio', '$'+fmt(c.ticket)+' mil'),
+  ].join('');
+  $('g-aporto-fin').innerHTML = [
+    card('Cartera activa', '$'+fmt(f.cartera)+' M'),
+    card('Mora > 30 días', fmt(f.mora30,1)+'%'),
+    card('Mora > 90 días', fmt(f.mora90,1)+'%'),
+    card('Cobranza del día', '$'+fmt(f.cobranza,1)+' M'),
+    card('Spread financiero', fmt(f.spread,1)+'%'),
+  ].join('');
+  $('g-apolito').innerHTML = [
+    card('Conversaciones hoy', fmt(a.conversaciones)),
+    card('Altas generadas', fmt(a.altas)),
+    card('Conversión', fmt(a.conversion,1)+'%'),
+  ].join('');
+  $('g-pocho').innerHTML = [
+    card('Consultas hoy', fmt(p.consultas)),
+    card('Gestiones resueltas', fmt(p.gestiones)),
+    card('Efectividad', fmt(p.efectividad,1)+'%'),
+  ].join('');
+}
+
+function renderCampo() {
+  $('g-hacienda').innerHTML = [
+    card('Índice novillo MAG', '$'+fmt(DEMO.novillo), { unidad:'/kg', sub:'Cañuelas — fuente a conectar' }),
+    card('Ternero invernada', '$'+fmt(DEMO.ternero), { unidad:'/kg' }),
+    card('Vaca consumo', '$'+fmt(DEMO.vaca_consumo), { unidad:'/kg' }),
+  ].join('');
+  $('g-granos-campo').innerHTML = granosCards();
+  $('g-insumos').innerHTML = [
+    card('Urea', fmt(DEMO.urea), { unidad:'USD/t' }),
+    card('Fosfato diamónico', fmt(DEMO.fosfato), { unidad:'USD/t' }),
+    card('Arrendamiento zona núcleo', fmt(DEMO.arrendamiento), { unidad:'qq soja/ha' }),
+  ].join('');
+  dibujarChartLluvia();
+}
+
+function renderTelas() {
+  const d = S.vals;
+  $('g-telas-fx').innerHTML = [
+    card('Real brasileño (USD/BRL)', d.usd_brl ? 'R$ '+fmt(d.usd_brl.v,2) : '…', { live: !!d.usd_brl, sub:'sube = importar más barato' }),
+    card('Real vs peso (BRL/ARS)', d.brl_ars ? '$'+fmt(d.brl_ars.venta,1) : '…', { live: !!d.brl_ars }),
+    card('Dólar mayorista', d.dolar_mayorista ? '$'+fmt(d.dolar_mayorista.venta) : '…', { live: !!d.dolar_mayorista, sub:'para pagos de importación' }),
+    card('Algodón ICE', fmt(DEMO.algodon,1), { unidad:'¢/lb', sub:'insumo del denim' }),
+  ].join('');
+
+  let tot = 0, totV = 0;
+  const filas = CTACTE.map(c => { tot += c.saldo; totV += c.vencido;
+    return `<tr><td>${c.cliente}</td><td>USD ${fmt(c.saldo)}</td><td>${c.vencido ? 'USD '+fmt(c.vencido) : '—'}</td><td>${c.dias||'—'}</td></tr>`; }).join('');
+  $('tbl-ctacte').innerHTML = `<details class="tbl" open><summary>Detalle por cliente</summary><table>
+    <tr><th>Cliente</th><th>Saldo</th><th>Vencido</th><th>Días</th></tr>${filas}
+    <tr><th>Total</th><th>USD ${fmt(tot)}</th><th>USD ${fmt(totV)}</th><th></th></tr></table></details>`;
+}
+
+/* ================= Alertas ================= */
+function evaluarAlertas() {
+  S.alerts = [];
+  for (const r of S.rules) {
+    const x = S.vals[r.key];
+    if (!x || x.v == null) continue;
+    const disparo = r.op === '>' ? x.v > r.th : x.v < r.th;
+    if (disparo) S.alerts.push({ regla: r, actual: x.v });
+  }
+  const n = S.alerts.length;
+  const tab = $('tab-alertas');
+  tab.querySelector('.abadge')?.remove();
+  if (n) tab.insertAdjacentHTML('beforeend', `<span class="abadge">${n}</span>`);
+}
+
+function renderAlertas() {
+  const act = $('g-alertas-activas');
+  if (!S.alerts.length) {
+    act.innerHTML = `<div class="alert-row"><span class="ic">✓</span><div><div class="tt">Todo en orden</div><div class="dd">Ninguna variable cruzó sus umbrales.</div></div></div>`;
+  } else {
+    act.innerHTML = S.alerts.map(a => `<div class="alert-row ${a.regla.sev}">
+      <span class="ic">${a.regla.sev==='crit'?'⛔':'⚠️'}</span>
+      <div><div class="tt">${a.regla.nombre}: ${fmt(a.actual, a.actual<100?1:0)} ${a.regla.unidad}</div>
+      <div class="dd">Umbral: ${a.regla.op} ${fmt(a.regla.th, a.regla.th<100?1:0)} ${a.regla.unidad} · ${a.regla.sev==='crit'?'Crítica':'Advertencia'}</div></div>
+    </div>`).join('');
+  }
+  $('g-reglas').innerHTML = S.rules.map(r => {
+    const x = S.vals[r.key];
+    return `<div class="rule-row">
+      <div class="rl"><div class="nm">${r.nombre}</div>
+      <div class="cur">actual: ${x && x.v!=null ? fmt(x.v, x.v<100?1:0)+' '+r.unidad : 'sin dato'}</div></div>
+      <span class="op">${r.op === '>' ? 'mayor a' : 'menor a'}</span>
+      <input type="number" value="${r.th}" step="any" data-rule="${r.id}">
+    </div>`;
+  }).join('');
+  act.parentElement.querySelectorAll('input[data-rule]').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const r = S.rules.find(x => x.id === e.target.dataset.rule);
+      const v = parseFloat(e.target.value);
+      if (r && !isNaN(v)) { r.th = v; evaluarAlertas(); renderAlertas(); }
+    });
+  });
+}
+
+/* ================= Charts (SVG) ================= */
+const tip = $('tooltip');
+function showTip(html, ev) {
+  tip.innerHTML = html; tip.style.display = 'block';
+  const x = Math.min(ev.clientX + 12, window.innerWidth - 150);
+  tip.style.left = x + 'px'; tip.style.top = (ev.clientY - 38) + 'px';
+}
+function hideTip() { tip.style.display = 'none'; }
+
+function mesLabel(fecha) { const [y,m] = fecha.split('-'); return MESES[+m-1] + ' ' + y.slice(2); }
+
+function dibujarChartIPC() {
+  const el = $('chart-ipc');
+  if (!S.ipc.length) { el.innerHTML = '<div class="sub" style="color:var(--text-muted);font-size:12px">Cargando…</div>'; return; }
+  const W = 700, H = 190, padL = 34, padB = 24, padT = 14;
+  const data = S.ipc;
+  const max = Math.max(...data.map(d=>d.valor)) * 1.15 || 1;
+  const bw = (W - padL - 8) / data.length;
+  const y = v => padT + (H - padT - padB) * (1 - v / max);
+  const maxIdx = data.reduce((mi,d,i) => d.valor > data[mi].valor ? i : mi, 0);
+  let s = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="Inflación mensual últimos 12 meses">`;
+  for (let i = 0; i <= 3; i++) {
+    const gv = max * i / 3, gy = y(gv);
+    s += `<line x1="${padL}" x2="${W-4}" y1="${gy}" y2="${gy}" stroke="var(--grid)" stroke-width="1"/>`;
+    s += `<text x="${padL-6}" y="${gy+3.5}" text-anchor="end" font-size="10" fill="var(--text-muted)" font-variant-numeric="tabular-nums">${gv.toFixed(1)}</text>`;
+  }
+  data.forEach((d, i) => {
+    const x0 = padL + i * bw + 1, w = bw - 2, y0 = y(d.valor), h = H - padB - y0;
+    s += `<path d="M${x0},${y0+4} a4,4 0 0 1 4,-4 h${w-8} a4,4 0 0 1 4,4 v${Math.max(h-4,0)} h${-w} Z"
+      fill="var(--series-1)" class="ipc-bar" data-i="${i}"/>`;
+    if (i === maxIdx || i === data.length-1)
+      s += `<text x="${x0+w/2}" y="${y0-5}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--text-secondary)">${d.valor.toFixed(1)}</text>`;
+    if (i % 2 === 0)
+      s += `<text x="${x0+w/2}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="var(--text-muted)">${mesLabel(d.fecha)}</text>`;
+  });
+  s += `<line x1="${padL}" x2="${W-4}" y1="${H-padB}" y2="${H-padB}" stroke="var(--baseline)" stroke-width="1"/></svg>`;
+  el.innerHTML = s;
+  el.querySelectorAll('.ipc-bar').forEach(b => {
+    b.addEventListener('mousemove', ev => { const d = data[+b.dataset.i]; showTip(`<b>${mesLabel(d.fecha)}</b><br>IPC ${d.valor.toFixed(1)}%`, ev); });
+    b.addEventListener('mouseleave', hideTip);
+  });
+  $('tbl-ipc').innerHTML = '<table><tr><th>Mes</th><th>IPC %</th></tr>' +
+    data.map(d=>`<tr><td>${mesLabel(d.fecha)}</td><td>${d.valor.toFixed(1)}</td></tr>`).join('') + '</table>';
+}
+
+function dibujarChartDolar() {
+  const el = $('chart-dolar');
+  const data = S.dolarHist.filter(d => d.mayorista != null);
+  if (!data.length) { el.innerHTML = '<div class="sub" style="color:var(--text-muted);font-size:12px">Cargando…</div>'; return; }
+  const W = 700, H = 190, padL = 44, padB = 22, padT = 12;
+  const vals = data.flatMap(d => [d.mayorista, d.blue]).filter(v => v != null);
+  const min = Math.min(...vals) * 0.995, max = Math.max(...vals) * 1.005;
+  const x = i => padL + (W - padL - 10) * (data.length === 1 ? 0 : i / (data.length - 1));
+  const y = v => padT + (H - padT - padB) * (1 - (v - min) / (max - min));
+  let s = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="Dólar mayorista y blue, 30 días">`;
+  for (let i = 0; i <= 3; i++) {
+    const gv = min + (max - min) * i / 3, gy = y(gv);
+    s += `<line x1="${padL}" x2="${W-4}" y1="${gy}" y2="${gy}" stroke="var(--grid)" stroke-width="1"/>`;
+    s += `<text x="${padL-6}" y="${gy+3.5}" text-anchor="end" font-size="10" fill="var(--text-muted)" font-variant-numeric="tabular-nums">${Math.round(gv)}</text>`;
+  }
+  const linea = (serie, colorVar) => {
+    const pts = data.map((d,i) => d[serie]!=null ? `${x(i)},${y(d[serie])}` : null).filter(Boolean);
+    return `<polyline points="${pts.join(' ')}" fill="none" stroke="var(${colorVar})" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  };
+  s += linea('mayorista','--series-1') + linea('blue','--series-2');
+  const ult = data.at(-1);
+  s += `<text x="${W-6}" y="${y(ult.mayorista)-6}" text-anchor="end" font-size="10.5" font-weight="600" fill="var(--text-secondary)">${fmt(ult.mayorista)}</text>`;
+  if (ult.blue != null) s += `<text x="${W-6}" y="${y(ult.blue)+13}" text-anchor="end" font-size="10.5" font-weight="600" fill="var(--text-secondary)">${fmt(ult.blue)}</text>`;
+  [0, Math.floor(data.length/2), data.length-1].forEach(i => {
+    const [yy,mm,dd] = data[i].fecha.split('-');
+    s += `<text x="${x(i)}" y="${H-6}" text-anchor="${i===0?'start':i===data.length-1?'end':'middle'}" font-size="9.5" fill="var(--text-muted)">${dd}/${mm}</text>`;
+  });
+  s += `<rect x="${padL}" y="${padT}" width="${W-padL-10}" height="${H-padT-padB}" fill="transparent" id="dolar-hover"/>`;
+  s += `<line x1="${padL}" x2="${W-4}" y1="${H-padB}" y2="${H-padB}" stroke="var(--baseline)" stroke-width="1"/></svg>`;
+  el.innerHTML = s;
+  const hov = el.querySelector('#dolar-hover');
+  hov.addEventListener('mousemove', ev => {
+    const r = el.querySelector('svg').getBoundingClientRect();
+    const px = (ev.clientX - r.left) / r.width * W;
+    const i = Math.max(0, Math.min(data.length-1, Math.round((px - padL) / ((W-padL-10) / (data.length-1)))));
+    const d = data[i];
+    showTip(`<b>${d.fecha}</b><br>Mayorista $${fmt(d.mayorista)}${d.blue!=null?`<br>Blue $${fmt(d.blue)}`:''}`, ev);
+  });
+  hov.addEventListener('mouseleave', hideTip);
+  $('tbl-dolar').innerHTML = '<table><tr><th>Fecha</th><th>Mayorista</th><th>Blue</th></tr>' +
+    data.slice(-10).map(d=>`<tr><td>${d.fecha}</td><td>$${fmt(d.mayorista)}</td><td>${d.blue!=null?'$'+fmt(d.blue):'—'}</td></tr>`).join('') + '</table>';
+}
+
+function dibujarChartLluvia() {
+  const el = $('chart-lluvia');
+  if (!S.lluvia) { el.innerHTML = '<div class="sub" style="color:var(--text-muted);font-size:12px">Cargando…</div>'; return; }
+  const dias = S.lluvia.time, vals = S.lluvia.precipitation_sum;
+  const hoyIdx = 7; // past_days=7
+  const W = 700, H = 170, padL = 30, padB = 22, padT = 12;
+  const max = Math.max(...vals.map(v=>v||0), 5) * 1.15;
+  const bw = (W - padL - 8) / dias.length;
+  const y = v => padT + (H - padT - padB) * (1 - v / max);
+  let s = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="Lluvias diarias en mm">`;
+  for (let i = 0; i <= 2; i++) {
+    const gv = max * i / 2, gy = y(gv);
+    s += `<line x1="${padL}" x2="${W-4}" y1="${gy}" y2="${gy}" stroke="var(--grid)" stroke-width="1"/>`;
+    s += `<text x="${padL-6}" y="${gy+3.5}" text-anchor="end" font-size="10" fill="var(--text-muted)">${Math.round(gv)}</text>`;
+  }
+  dias.forEach((dia, i) => {
+    const v = vals[i] || 0;
+    const x0 = padL + i * bw + 1, w = bw - 2, y0 = y(v), h = H - padB - y0;
+    const fill = i < hoyIdx ? 'var(--series-1)' : 'var(--series-seq-250)';
+    if (v > 0.05)
+      s += `<path d="M${x0},${y0+4} a4,4 0 0 1 4,-4 h${Math.max(w-8,1)} a4,4 0 0 1 4,4 v${Math.max(h-4,0)} h${-w} Z" fill="${fill}" class="ll-bar" data-i="${i}"/>`;
+    else
+      s += `<rect x="${x0}" y="${H-padB-1.5}" width="${w}" height="1.5" fill="${fill}" class="ll-bar" data-i="${i}" opacity=".55"/>`;
+    if (v >= max/1.15*0.6) s += `<text x="${x0+w/2}" y="${y0-5}" text-anchor="middle" font-size="10" font-weight="600" fill="var(--text-secondary)">${v.toFixed(0)}</text>`;
+    if (i % 2 === 1) {
+      const [yy,mm,dd] = dia.split('-');
+      s += `<text x="${x0+w/2}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="var(--text-muted)">${dd}/${mm}</text>`;
+    }
+  });
+  s += `<line x1="${padL}" x2="${W-4}" y1="${H-padB}" y2="${H-padB}" stroke="var(--baseline)" stroke-width="1"/></svg>`;
+  el.innerHTML = s;
+  el.querySelectorAll('.ll-bar').forEach(b => {
+    b.addEventListener('mousemove', ev => { const i = +b.dataset.i; showTip(`<b>${dias[i]}</b><br>${(vals[i]||0).toFixed(1)} mm ${i<hoyIdx?'(registrado)':'(pronóstico)'}`, ev); });
+    b.addEventListener('mouseleave', hideTip);
+  });
+  $('tbl-lluvia').innerHTML = '<table><tr><th>Día</th><th>mm</th><th>Tipo</th></tr>' +
+    dias.map((d,i)=>`<tr><td>${d}</td><td>${(vals[i]||0).toFixed(1)}</td><td>${i<hoyIdx?'registrado':'pronóstico'}</td></tr>`).join('') + '</table>';
+}
+
+/* ================= Render global ================= */
+function renderTodo() {
+  renderMercados();
+  renderAporto();
+  renderCampo();
+  renderTelas();
+  evaluarAlertas();
+  renderAlertas();
+}
+
+/* ================= Navegación ================= */
+document.querySelectorAll('nav button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    $('panel-' + b.dataset.tab).classList.add('active');
+    window.scrollTo({ top: 0 });
+  });
+});
+$('refresh-btn').addEventListener('click', cargarTodo);
+
+renderTodo();
+cargarTodo();
+setInterval(cargarTodo, 60000);
+
+// Registro del service worker (solo cuando la app está publicada en https)
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
