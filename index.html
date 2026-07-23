@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a0c0f">
@@ -31,7 +31,7 @@
   body{
     background:var(--bg); color:var(--text);
     font-family:'IBM Plex Sans',system-ui,sans-serif;
-    padding-bottom:calc(110px + env(safe-area-inset-bottom));
+    padding-bottom:calc(150px + env(safe-area-inset-bottom));
     -webkit-tap-highlight-color:transparent;
   }
   .mono{ font-family:'IBM Plex Mono',monospace; }
@@ -160,8 +160,8 @@
   .rrow .nm .t{ font-size:13px; }
   .rrow .nm .c{ font-size:11.5px; color:var(--faint); margin-top:1px; }
   .rrow input[type=number]{
-    width:76px; padding:6px 8px; border-radius:10px; border:1px solid var(--border);
-    background:var(--surface2); color:var(--text); font-size:13px; text-align:right;
+    width:92px; padding:6px 8px; border-radius:10px; border:1px solid var(--border);
+    background:var(--surface2); color:var(--text); font-size:16px; text-align:right;
     font-family:'IBM Plex Mono',monospace;
   }
   .toggle{ width:38px; height:22px; border-radius:999px; background:var(--surface2); position:relative; flex:none; cursor:pointer; border:none; transition:background .2s; }
@@ -336,7 +336,7 @@
       <div class="c-title">🔒 Datos del negocio protegidos</div>
       <div class="c-sub" style="margin-bottom:10px;">Cuentas, proveedor, rentabilidad y pedidos están cifrados. Ingresá tu clave para verlos en este dispositivo.</div>
       <div style="display:flex; gap:8px;">
-        <input type="password" id="telas-clave" placeholder="Clave" style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; font-family:inherit;">
+        <input type="password" id="telas-clave" placeholder="Clave" style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:16px; font-family:inherit;">
         <button id="telas-unlock" style="padding:10px 16px; border-radius:10px; border:none; background:var(--accent); color:#fff; font-weight:600; font-size:13px; cursor:pointer; font-family:inherit;">Desbloquear</button>
       </div>
       <div id="telas-err" style="color:var(--neg); font-size:12px; margin-top:8px; display:none;">Clave incorrecta. Probá de nuevo.</div>
@@ -415,6 +415,7 @@ const S = {
 const fmt = (n, d=0) => n==null ? '—' : n.toLocaleString('es-AR', {minimumFractionDigits:d, maximumFractionDigits:d});
 const $ = id => document.getElementById(id);
 const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const ult = (a, n) => a[a.length - (n || 1)];
 const MES1 = ['E','F','M','A','M','J','J','A','S','O','N','D'];
 const POS = 'var(--pos)', NEG = 'var(--neg)', MUT = 'var(--muted)';
 
@@ -520,7 +521,7 @@ function derivar() {
   S.vals.aporto_mora30 = { v: 6.2 };
   if (S.vals.dolar_blue) S.vals.blue_venta = { v: S.vals.dolar_blue.venta };
   if (S.vals.riesgo) S.vals.riesgo_pais = { v: S.vals.riesgo.valor };
-  const ipcU = S.ipc.at(-1);
+  const ipcU = ult(S.ipc);
   if (ipcU) S.vals.ipc_ultimo = { v: ipcU.valor };
 }
 
@@ -549,18 +550,18 @@ function renderResumen() {
   const dB = S.vals.dolar_blue, dM = S.vals.dolar_mayorista;
 
   const kpis = [];
-  const dltB = deltaPct(blueArr.at(-1), blueArr.at(-2));
+  const dltB = deltaPct(ult(blueArr), ult(blueArr,2));
   kpis.push({ lbl:'Dólar Blue', unit:'$', val: dB?fmt(dB.venta):'…', d:dltB, sp: blueArr.slice(-8), spc: dltB.color });
-  const dltM = deltaPct(mayArr.at(-1), mayArr.at(-2));
+  const dltM = deltaPct(ult(mayArr), ult(mayArr,2));
   kpis.push({ lbl:'Mayorista', unit:'$', val: dM?fmt(dM.venta):'…', d:dltM, sp: mayArr.slice(-8), spc: dltM.color });
-  const dltBr = deltaPP(brechaArr.at(-1), brechaArr.at(-2));
+  const dltBr = deltaPP(ult(brechaArr), ult(brechaArr,2));
   kpis.push({ lbl:'Brecha', unit:'', val: S.vals.brecha?fmt(S.vals.brecha.v,1)+'%':'…', d:dltBr, sp: brechaArr.slice(-8), spc: dltBr.color });
   const rsSerie = ((S.ext && S.ext.riesgo_serie) || []).map(x=>x.valor);
-  const dltR = rsSerie.length>1 ? deltaPP(rsSerie.at(-1), rsSerie.at(-2), true) : {txt: S.vals.riesgo? S.vals.riesgo.fecha : '', color:MUT};
+  const dltR = rsSerie.length>1 ? deltaPP(ult(rsSerie), ult(rsSerie,2), true) : {txt: S.vals.riesgo? S.vals.riesgo.fecha : '', color:MUT};
   if (dltR.txt && dltR.txt.includes('pp')) dltR.txt = dltR.txt.replace(' pp','').replace('pp','pb');
   kpis.push({ lbl:'Riesgo país', unit:'', val: S.vals.riesgo?fmt(S.vals.riesgo.valor)+' pb':'…', d:dltR, sp: rsSerie.slice(-10), spc: dltR.color });
-  const dltI = deltaPP(ipcArr.at(-1), ipcArr.at(-2));
-  kpis.push({ lbl:'IPC mensual', unit:'', val: ipcArr.length?fmt(ipcArr.at(-1),1)+'%':'…', d:dltI, sp: ipcArr.slice(-8), spc: dltI.color });
+  const dltI = deltaPP(ult(ipcArr), ult(ipcArr,2));
+  kpis.push({ lbl:'IPC mensual', unit:'', val: ipcArr.length?fmt(ult(ipcArr),1)+'%':'…', d:dltI, sp: ipcArr.slice(-8), spc: dltI.color });
   kpis.push({ lbl:'Soja Rosario', unit:'US$', val: S.vals.soja_ros_usd?fmt(S.vals.soja_ros_usd.v):'…', d:{txt: S.ext&&S.ext.granos_ros?('pizarra '+(S.ext.granos_ros.fecha||'')):'', color:MUT}, sp:null });
 
   $('g-kpis').innerHTML = kpis.map(k => `<div class="kpi">
@@ -641,8 +642,8 @@ function renderMercados() {
   const chip = (lbl, val, dlt) => `<div class="chip"><div class="lbl">${lbl}</div><div class="val mono">${val}</div><div class="d mono" style="color:${dlt.color}">${dlt.txt}</div></div>`;
   const blueArr = hist.map(h=>h.blue).filter(x=>x!=null), mayArr = hist.map(h=>h.mayorista);
   $('chips-dolar').innerHTML =
-    chip('Blue', v.dolar_blue?'$'+fmt(v.dolar_blue.venta):'…', deltaPct(blueArr.at(-1), blueArr.at(-2))) +
-    chip('Mayorista', v.dolar_mayorista?'$'+fmt(v.dolar_mayorista.venta):'…', deltaPct(mayArr.at(-1), mayArr.at(-2))) +
+    chip('Blue', v.dolar_blue?'$'+fmt(v.dolar_blue.venta):'…', deltaPct(ult(blueArr), ult(blueArr,2))) +
+    chip('Mayorista', v.dolar_mayorista?'$'+fmt(v.dolar_mayorista.venta):'…', deltaPct(ult(mayArr), ult(mayArr,2))) +
     chip('Minorista', v.dolar_oficial?'$'+fmt(v.dolar_oficial.venta):'…', {txt:'',color:MUT}) +
     chip('MEP', v.dolar_bolsa?'$'+fmt(v.dolar_bolsa.venta):'…', {txt:'',color:MUT}) +
     chip('CCL', v.dolar_contadoconliqui?'$'+fmt(v.dolar_contadoconliqui.venta):'…', {txt:'',color:MUT}) +
@@ -694,7 +695,7 @@ function renderMercados() {
   const dpct = (p, badUp=false) => p==null ? {txt:'',color:MUT} :
     { txt:(p>=0?'▲ ':'▼ ')+fmt(Math.abs(p),1)+'%', color: Math.abs(p)<0.05?MUT:((badUp? p<0 : p>=0)?POS:NEG) };
   const serieU = b.serie || [];
-  const dY = (k) => serieU.length>1 ? deltaPP(serieU.at(-1)[k], serieU.at(-2)[k]) : {txt:'',color:MUT};
+  const dY = (k) => serieU.length>1 ? deltaPP(ult(serieU)[k], ult(serieU,2)[k]) : {txt:'',color:MUT};
   $('rows-energia').innerHTML =
     kv('Petróleo WTI', f.wti!=null?'US$ '+fmt(f.wti,1):'…', dpct(f.wti_pct)) +
     kv('Petróleo Brent', f.brent!=null?'US$ '+fmt(f.brent,1):'…', dpct(f.brent_pct)) +
@@ -724,7 +725,7 @@ function renderMercados() {
     return kv(nombre + ' ($)', fmt(o.ultimo/1000,1)+'k', dlt);
   };
   $('rows-bonos-arg').innerHTML =
-    kv('Riesgo país', v.riesgo?fmt(v.riesgo.valor)+' pb':'…', {txt: rs.length>1?deltaPP(rs.at(-1).valor, rs.at(-2).valor, true).txt.replace('pp',''):'', color: rs.length>1?deltaPP(rs.at(-1).valor, rs.at(-2).valor, true).color:MUT}) +
+    kv('Riesgo país', v.riesgo?fmt(v.riesgo.valor)+' pb':'…', {txt: rs.length>1?deltaPP(ult(rs).valor, ult(rs,2).valor, true).txt.replace('pp',''):'', color: rs.length>1?deltaPP(ult(rs).valor, ult(rs,2).valor, true).color:MUT}) +
     bonoRow('AL30', ba.AL30) + bonoRow('GD30', ba.GD30);
 
   const act = S.ext ? new Date(S.ext.actualizado).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : null;

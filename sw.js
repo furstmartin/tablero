@@ -1,4 +1,4 @@
-const CACHE = 'tablero-v2';
+const CACHE = 'tablero-v3';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
