@@ -27,12 +27,13 @@
     --pos:#159a5d; --neg:#e23b3b; --warn:#c77a00;
     --navbg:rgba(255,255,255,.94); --shadow:0 1px 0 rgba(255,255,255,.6), 0 10px 26px rgba(20,30,50,.12);
   }
-  html,body{ height:100%; }
+  html, body{ height:100%; overflow:hidden; overscroll-behavior:none; }
   body{
     background:var(--bg); color:var(--text);
     font-family:'IBM Plex Sans',system-ui,sans-serif;
-    padding-bottom:calc(150px + env(safe-area-inset-bottom));
     -webkit-tap-highlight-color:transparent;
+    display:flex; flex-direction:column;
+    height:100vh; height:100dvh;
   }
   .mono{ font-family:'IBM Plex Mono',monospace; }
   ::-webkit-scrollbar{ width:0; height:0; }
@@ -40,7 +41,7 @@
   @keyframes fadein{ from{ opacity:0; transform:translateY(6px) } to{ opacity:1; transform:none } }
 
   header{
-    position:sticky; top:0; z-index:20; background:var(--bg);
+    flex:none; z-index:20; background:var(--bg);
     border-bottom:1px solid var(--border);
     padding:calc(10px + env(safe-area-inset-top)) var(--pad) 12px;
   }
@@ -67,8 +68,11 @@
   #live-pill.stale{ color:var(--warn); background:rgba(255,176,32,.14); }
   #live-pill .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; animation:pulse 2s infinite; }
 
-  main{ max-width:760px; margin:0 auto; padding:var(--pad); }
-  .panel{ display:none; }
+  main{
+    flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain; padding:var(--pad); padding-bottom:32px; width:100%;
+  }
+  .panel{ display:none; max-width:760px; margin:0 auto; width:100%; }
   .panel.active{ display:flex; flex-direction:column; gap:var(--gap); animation:fadein .25s ease; }
 
   .card{
@@ -178,8 +182,8 @@
   .back-btn{ align-self:flex-start; display:inline-flex; align-items:center; gap:6px; background:none; border:none; color:var(--muted); font-size:13px; cursor:pointer; padding:0; font-family:inherit; }
 
   nav{
-    position:fixed; bottom:0; left:0; right:0; z-index:30;
-    display:flex; background:var(--navbg); backdrop-filter:blur(12px);
+    flex:none; z-index:30;
+    display:flex; background:var(--navbg);
     border-top:1px solid var(--border);
     padding:8px 6px calc(8px + env(safe-area-inset-bottom));
   }
@@ -268,6 +272,11 @@
     <div class="card tight">
       <div class="c-title" style="padding:10px 0 4px;">Energía, algodón y tasas</div>
       <div id="rows-energia"></div>
+    </div>
+
+    <div class="card tight">
+      <div class="c-title" style="padding:10px 0 4px;">Cripto</div>
+      <div id="rows-cripto"></div>
     </div>
 
     <div class="card">
@@ -500,6 +509,11 @@ async function cargarTodo() {
     }),
     j('https://api.open-meteo.com/v1/forecast?latitude=-28.9711&longitude=-59.8489&daily=precipitation_sum&past_days=7&forecast_days=7&timezone=America%2FArgentina%2FBuenos_Aires').then(d => S.lluvia = d.daily),
     fetch('datos.json?v=' + Date.now()).then(r => r.ok ? r.json() : null).then(d => { if (d) S.ext = d; }).catch(()=>{}),
+    fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=%5B%22BTCUSDT%22,%22ETHUSDT%22%5D')
+      .then(r => r.ok ? r.json() : null)
+      .then(a => { if (Array.isArray(a)) for (const t of a) S.vals['bin_'+t.symbol] = { v:+t.lastPrice, pct:+t.priceChangePercent }; })
+      .catch(()=>{}),
+    j('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd&include_24hr_change=true').then(d => S.cripto = d).catch(()=>{}),
     fetch('telas.enc.json?v=' + Date.now()).then(r => r.ok ? r.json() : null).then(async d => {
       if (!d) return;
       S.telasEnc = d;
@@ -706,6 +720,21 @@ function renderMercados() {
     kv('Plazo fijo TNA (BNA)', v.pf_tna?fmt(v.pf_tna.v,1)+'%':'…') +
     kv('Real (USD/BRL)', v.usd_brl?'R$ '+fmt(v.usd_brl.v,2):'…') +
     kv('Real vs peso (BRL/ARS)', v.brl_ars?'$'+fmt(v.brl_ars.venta,1):'…');
+
+  // cripto — Binance (par USDT real) con respaldo CoinGecko
+  const cg = S.cripto || {};
+  const usdtUsd = cg.tether ? cg.tether.usd : null;
+  const cripto = (sym, id) => {
+    const b = v['bin_'+sym];
+    if (b) return { v: b.v, pct: b.pct };
+    if (cg[id] && usdtUsd) return { v: cg[id].usd / usdtUsd, pct: cg[id].usd_24h_change };
+    return null;
+  };
+  const btc = cripto('BTCUSDT','bitcoin'), eth = cripto('ETHUSDT','ethereum');
+  $('rows-cripto').innerHTML =
+    kv('Bitcoin (BTC/USDT)', btc ? fmt(btc.v) : '…', btc ? dpct(btc.pct) : undefined) +
+    kv('Ethereum (ETH/USDT)', eth ? fmt(eth.v) : '…', eth ? dpct(eth.pct) : undefined) +
+    kv('USDT / USD', usdtUsd != null ? fmt(usdtUsd, 4) : '…', cg.tether ? dpct(cg.tether.usd_24h_change) : undefined);
 
   // bonos USA — serie de rendimientos
   $('ust-fecha').textContent = b.fecha || '';
@@ -948,7 +977,7 @@ function irA(tab) {
   $('panel-'+tab).classList.add('active');
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   $('sec-title').textContent = TITULOS[tab];
-  window.scrollTo({ top:0 });
+  document.querySelector('main').scrollTo({ top:0 });
 }
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => irA(b.dataset.tab)));
 $('bell-btn').addEventListener('click', () => irA('alertas'));
