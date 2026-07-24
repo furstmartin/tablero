@@ -655,8 +655,11 @@ function renderMercados() {
   const hist = S.dolarHist;
   const chip = (lbl, val, dlt) => `<div class="chip"><div class="lbl">${lbl}</div><div class="val mono">${val}</div><div class="d mono" style="color:${dlt.color}">${dlt.txt}</div></div>`;
   const blueArr = hist.map(h=>h.blue).filter(x=>x!=null), mayArr = hist.map(h=>h.mayorista);
+  const dCr = v.dolar_cripto, dBl = v.dolar_blue;
+  const difCripto = (dCr && dBl) ? { txt: 'vs blue ' + (dCr.venta>=dBl.venta?'+':'−') + fmt(Math.abs(dCr.venta/dBl.venta-1)*100,1)+'%', color: MUT } : {txt:'',color:MUT};
   $('chips-dolar').innerHTML =
     chip('Blue', v.dolar_blue?'$'+fmt(v.dolar_blue.venta):'…', deltaPct(ult(blueArr), ult(blueArr,2))) +
+    chip('Cripto (USDT)', dCr?'$'+fmt(dCr.venta):'…', difCripto) +
     chip('Mayorista', v.dolar_mayorista?'$'+fmt(v.dolar_mayorista.venta):'…', deltaPct(ult(mayArr), ult(mayArr,2))) +
     chip('Minorista', v.dolar_oficial?'$'+fmt(v.dolar_oficial.venta):'…', {txt:'',color:MUT}) +
     chip('MEP', v.dolar_bolsa?'$'+fmt(v.dolar_bolsa.venta):'…', {txt:'',color:MUT}) +
@@ -731,9 +734,11 @@ function renderMercados() {
     return null;
   };
   const btc = cripto('BTCUSDT','bitcoin'), eth = cripto('ETHUSDT','ethereum');
+  const dcr = v.dolar_cripto;
   $('rows-cripto').innerHTML =
     kv('Bitcoin (BTC/USDT)', btc ? fmt(btc.v) : '…', btc ? dpct(btc.pct) : undefined) +
     kv('Ethereum (ETH/USDT)', eth ? fmt(eth.v) : '…', eth ? dpct(eth.pct) : undefined) +
+    kv('USDT / Peso (dólar cripto)', dcr ? '$'+fmt(dcr.venta) : '…', (dcr && v.dolar_blue) ? {txt:'vs blue '+(dcr.venta>=v.dolar_blue.venta?'+':'−')+fmt(Math.abs(dcr.venta/v.dolar_blue.venta-1)*100,1)+'%', color:MUT} : undefined) +
     kv('USDT / USD', usdtUsd != null ? fmt(usdtUsd, 4) : '…', cg.tether ? dpct(cg.tether.usd_24h_change) : undefined);
 
   // bonos USA — serie de rendimientos
