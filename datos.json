@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-08-13T23:04:47Z",
+ "actualizado": "2026-08-14T00:00:55Z",
  "granos_ros": {
   "fecha": "12/08/2026",
   "fecha_prev": "11/08/2026",
@@ -16,10 +16,10 @@
   "maiz_prev": 263700.0
  },
  "futuros": {
-  "wti": 81.08,
-  "wti_pct": -0.21,
-  "brent": 86.93,
-  "brent_pct": -0.16,
+  "wti": 81.33,
+  "wti_pct": 0.1,
+  "brent": 87.11,
+  "brent_pct": 0.05,
   "algodon": 83.5,
   "algodon_pct": null,
   "soja_cbot": 434.4,
@@ -162,10 +162,6 @@
   ]
  },
  "riesgo_serie": [
-  {
-   "valor": 570,
-   "fecha": "2026-04-08"
-  },
   {
    "valor": 557,
    "fecha": "2026-04-09"
@@ -521,6 +517,10 @@
   {
    "valor": 466,
    "fecha": "2026-08-11"
+  },
+  {
+   "valor": 471,
+   "fecha": "2026-08-12"
   }
  ],
  "bonos_arg": {
