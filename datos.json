@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-08-19T17:43:07Z",
+ "actualizado": "2026-08-19T18:55:30Z",
  "granos_ros": {
   "fecha": "18/08/2026",
   "fecha_prev": "14/08/2026",
@@ -16,18 +16,18 @@
   "maiz_prev": 269090.0
  },
  "futuros": {
-  "wti": 86.55,
-  "wti_pct": 1.9,
-  "brent": 92.23,
-  "brent_pct": 1.33,
-  "algodon": 88.13,
-  "algodon_pct": 3.18,
-  "soja_cbot": 454.0,
-  "soja_cbot_pct": 1.54,
-  "maiz_cbot": 194.7,
-  "maiz_cbot_pct": 1.33,
-  "trigo_cbot": 273.3,
-  "trigo_cbot_pct": 1.91
+  "wti": 85.53,
+  "wti_pct": 0.69,
+  "brent": 91.41,
+  "brent_pct": 0.43,
+  "algodon": 88.14,
+  "algodon_pct": 3.2,
+  "soja_cbot": 454.2,
+  "soja_cbot_pct": 1.58,
+  "maiz_cbot": 196.2,
+  "maiz_cbot_pct": 2.1,
+  "trigo_cbot": 274.2,
+  "trigo_cbot_pct": 2.24
  },
  "bonos_usa": {
   "y2": 4.19,
@@ -758,14 +758,6 @@
  "ipim": {
   "serie": [
    {
-    "fecha": "2025-06-01",
-    "valor": 1.6
-   },
-   {
-    "fecha": "2025-07-01",
-    "valor": 2.8
-   },
-   {
     "fecha": "2025-08-01",
     "valor": 3.1
    },
@@ -804,11 +796,19 @@
    {
     "fecha": "2026-05-01",
     "valor": 2.5
+   },
+   {
+    "fecha": "2026-06-01",
+    "valor": 1.1
+   },
+   {
+    "fecha": "2026-07-01",
+    "valor": 0.8
    }
   ],
   "ultimo": {
-   "fecha": "2026-05-01",
-   "valor": 2.5
+   "fecha": "2026-07-01",
+   "valor": 0.8
   }
  },
  "novillo": null
