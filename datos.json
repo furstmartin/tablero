@@ -1,44 +1,39 @@
 {
- "actualizado": "2026-08-27T09:54:21Z",
+ "actualizado": "2026-08-27T20:33:21Z",
  "granos_ros": {
-  "fecha": "25/08/2026",
-  "fecha_prev": "24/08/2026",
+  "fecha": "26/08/2026",
+  "fecha_prev": "25/08/2026",
   "moneda": "ARS/t",
-  "soja": 530000.0,
-  "soja_prev": 525000.0,
-  "sorgo": 277962.0,
-  "sorgo_prev": 277685.0,
+  "soja": 540000.0,
+  "soja_prev": 530000.0,
+  "sorgo": 276900.0,
+  "sorgo_prev": 277962.0,
   "girasol": null,
   "girasol_prev": null,
-  "trigo": 338100.0,
-  "trigo_prev": 337725.0,
-  "maiz": 269000.0,
-  "maiz_prev": 270180.0
+  "trigo": 343000.0,
+  "trigo_prev": 338100.0,
+  "maiz": 270500.0,
+  "maiz_prev": 269000.0
  },
  "futuros": {
-  "wti": 82.01,
-  "wti_pct": -0.27,
-  "brent": 87.88,
-  "brent_pct": 0.05,
-  "algodon": 89.03,
-  "algodon_pct": -0.12,
-  "soja_cbot": 462.8,
-  "soja_cbot_pct": -0.51,
-  "maiz_cbot": 210.0,
-  "maiz_cbot_pct": -0.56,
-  "trigo_cbot": 295.3,
-  "trigo_cbot_pct": 0.23
+  "wti": 83.61,
+  "wti_pct": 1.68,
+  "brent": 89.59,
+  "brent_pct": 1.99,
+  "algodon": 92.34,
+  "algodon_pct": 3.59,
+  "soja_cbot": 464.3,
+  "soja_cbot_pct": -0.2,
+  "maiz_cbot": 209.2,
+  "maiz_cbot_pct": -0.93,
+  "trigo_cbot": 298.4,
+  "trigo_cbot_pct": 1.3
  },
  "bonos_usa": {
-  "y2": 4.19,
-  "y10": 4.66,
-  "fecha": "2026-08-26",
+  "y2": 4.2,
+  "y10": 4.67,
+  "fecha": "2026-08-27",
   "serie": [
-   {
-    "fecha": "2026-07-23",
-    "y2": 4.37,
-    "y10": 4.71
-   },
    {
     "fecha": "2026-07-24",
     "y2": 4.33,
@@ -158,6 +153,11 @@
     "fecha": "2026-08-26",
     "y2": 4.19,
     "y10": 4.66
+   },
+   {
+    "fecha": "2026-08-27",
+    "y2": 4.2,
+    "y10": 4.67
    }
   ]
  },
@@ -633,11 +633,15 @@
     {
      "fecha": "2026-08-26",
      "v": 84940.0
+    },
+    {
+     "fecha": "2026-08-27",
+     "v": 85190.0
     }
    ],
-   "ultimo": 84940.0,
-   "prev": 84800.0,
-   "fecha": "2026-08-26"
+   "ultimo": 85190.0,
+   "prev": 84940.0,
+   "fecha": "2026-08-27"
   },
   "GD30": {
    "serie": [
@@ -748,11 +752,15 @@
     {
      "fecha": "2026-08-26",
      "v": 88810.0
+    },
+    {
+     "fecha": "2026-08-27",
+     "v": 88710.0
     }
    ],
-   "ultimo": 88810.0,
-   "prev": 88500.0,
-   "fecha": "2026-08-26"
+   "ultimo": 88710.0,
+   "prev": 88810.0,
+   "fecha": "2026-08-27"
   }
  },
  "ipim": {
