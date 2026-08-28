@@ -1,33 +1,33 @@
 {
- "actualizado": "2026-08-28T05:26:29Z",
+ "actualizado": "2026-08-28T18:46:06Z",
  "granos_ros": {
-  "fecha": "26/08/2026",
-  "fecha_prev": "25/08/2026",
+  "fecha": "27/08/2026",
+  "fecha_prev": "26/08/2026",
   "moneda": "ARS/t",
   "soja": 540000.0,
-  "soja_prev": 530000.0,
-  "sorgo": 276900.0,
-  "sorgo_prev": 277962.0,
+  "soja_prev": 540000.0,
+  "sorgo": 275000.0,
+  "sorgo_prev": 276900.0,
   "girasol": null,
   "girasol_prev": null,
-  "trigo": 343000.0,
-  "trigo_prev": 338100.0,
+  "trigo": 356200.0,
+  "trigo_prev": 343000.0,
   "maiz": 270500.0,
-  "maiz_prev": 269000.0
+  "maiz_prev": 270500.0
  },
  "futuros": {
-  "wti": 83.29,
-  "wti_pct": -0.29,
-  "brent": 89.35,
-  "brent_pct": -0.39,
-  "algodon": 92.31,
-  "algodon_pct": -0.11,
-  "soja_cbot": 467.5,
-  "soja_cbot_pct": 0.34,
-  "maiz_cbot": 210.9,
-  "maiz_cbot_pct": 0.42,
-  "trigo_cbot": 300.1,
-  "trigo_cbot_pct": 0.2
+  "wti": 83.21,
+  "wti_pct": -0.38,
+  "brent": 89.3,
+  "brent_pct": -0.45,
+  "algodon": 91.46,
+  "algodon_pct": -1.03,
+  "soja_cbot": 473.2,
+  "soja_cbot_pct": 1.56,
+  "maiz_cbot": 211.1,
+  "maiz_cbot_pct": 0.52,
+  "trigo_cbot": 308.5,
+  "trigo_cbot_pct": 2.99
  },
  "bonos_usa": {
   "y2": 4.2,
@@ -162,18 +162,6 @@
   ]
  },
  "riesgo_serie": [
-  {
-   "valor": 533,
-   "fecha": "2026-04-21"
-  },
-  {
-   "valor": 532,
-   "fecha": "2026-04-22"
-  },
-  {
-   "valor": 549,
-   "fecha": "2026-04-23"
-  },
   {
    "valor": 557,
    "fecha": "2026-04-24"
@@ -521,6 +509,18 @@
   {
    "valor": 509,
    "fecha": "2026-08-24"
+  },
+  {
+   "valor": 512,
+   "fecha": "2026-08-25"
+  },
+  {
+   "valor": 517,
+   "fecha": "2026-08-26"
+  },
+  {
+   "valor": 509,
+   "fecha": "2026-08-27"
   }
  ],
  "bonos_arg": {
