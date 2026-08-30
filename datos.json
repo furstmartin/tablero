@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-08-30T21:10:31Z",
+ "actualizado": "2026-08-30T23:32:45Z",
  "granos_ros": {
   "fecha": "27/08/2026",
   "fecha_prev": "26/08/2026",
@@ -16,10 +16,10 @@
   "maiz_prev": 270500.0
  },
  "futuros": {
-  "wti": 83.4,
-  "wti_pct": null,
-  "brent": 88.1,
-  "brent_pct": null,
+  "wti": 84.78,
+  "wti_pct": 1.65,
+  "brent": 89.69,
+  "brent_pct": 1.8,
   "algodon": 91.38,
   "algodon_pct": null,
   "soja_cbot": 473.3,
