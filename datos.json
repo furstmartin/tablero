@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-09-24T22:28:14Z",
+ "actualizado": "2026-09-25T01:33:56Z",
  "granos_ros": {
   "fecha": "23/09/2026",
   "fecha_prev": "22/09/2026",
@@ -16,18 +16,18 @@
   "maiz_prev": 298500.0
  },
  "futuros": {
-  "wti": 94.35,
-  "wti_pct": -0.27,
-  "brent": 106.68,
-  "brent_pct": 0.08,
-  "algodon": 83.31,
-  "algodon_pct": 0.51,
-  "soja_cbot": 484.1,
-  "soja_cbot_pct": null,
-  "maiz_cbot": 207.7,
-  "maiz_cbot_pct": null,
-  "trigo_cbot": 278.3,
-  "trigo_cbot_pct": null
+  "wti": 93.36,
+  "wti_pct": -1.32,
+  "brent": 105.74,
+  "brent_pct": -0.81,
+  "algodon": 82.53,
+  "algodon_pct": -0.94,
+  "soja_cbot": 480.9,
+  "soja_cbot_pct": -0.66,
+  "maiz_cbot": 205.0,
+  "maiz_cbot_pct": -1.28,
+  "trigo_cbot": 272.5,
+  "trigo_cbot_pct": -2.09
  },
  "bonos_usa": {
   "y2": 4.87,
@@ -162,10 +162,6 @@
   ]
  },
  "riesgo_serie": [
-  {
-   "valor": 516,
-   "fecha": "2026-05-21"
-  },
   {
    "valor": 514,
    "fecha": "2026-05-22"
@@ -521,6 +517,10 @@
   {
    "valor": 566,
    "fecha": "2026-09-23"
+  },
+  {
+   "valor": 578,
+   "fecha": "2026-09-24"
   }
  ],
  "bonos_arg": {
