@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-09-28T07:46:38Z",
+ "actualizado": "2026-09-28T08:46:18Z",
  "granos_ros": {
   "fecha": "24/09/2026",
   "fecha_prev": "23/09/2026",
@@ -16,18 +16,18 @@
   "maiz_prev": 295400.0
  },
  "futuros": {
-  "wti": 94.22,
-  "wti_pct": 1.96,
-  "brent": 106.54,
-  "brent_pct": 2.13,
-  "algodon": 82.39,
-  "algodon_pct": -0.39,
-  "soja_cbot": 477.1,
-  "soja_cbot_pct": -1.55,
-  "maiz_cbot": 205.6,
-  "maiz_cbot_pct": -1.14,
-  "trigo_cbot": 274.1,
-  "trigo_cbot_pct": -1.0
+  "wti": 94.98,
+  "wti_pct": 2.78,
+  "brent": 107.47,
+  "brent_pct": 3.02,
+  "algodon": 82.7,
+  "algodon_pct": -0.01,
+  "soja_cbot": 477.2,
+  "soja_cbot_pct": -1.54,
+  "maiz_cbot": 206.1,
+  "maiz_cbot_pct": -0.9,
+  "trigo_cbot": 275.2,
+  "trigo_cbot_pct": -0.6
  },
  "bonos_usa": {
   "y2": 4.81,
