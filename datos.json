@@ -1,23 +1,9 @@
 {
- "actualizado": "2026-09-30T20:30:28Z",
- "granos_ros": {
-  "fecha": "29/09/2026",
-  "fecha_prev": "28/09/2026",
-  "moneda": "ARS/t",
-  "soja": 560000.0,
-  "soja_prev": 555000.0,
-  "sorgo": 295000.0,
-  "sorgo_prev": 287950.0,
-  "girasol": null,
-  "girasol_prev": null,
-  "trigo": 346500.0,
-  "trigo_prev": 347050.0,
-  "maiz": 295800.0,
-  "maiz_prev": 291750.0
- },
+ "actualizado": "2026-09-30T21:29:18Z",
+ "granos_ros": null,
  "futuros": {
-  "wti": 90.56,
-  "wti_pct": 1.32,
+  "wti": 90.34,
+  "wti_pct": 1.07,
   "brent": 103.58,
   "brent_pct": 0.97,
   "algodon": 78.6,
@@ -637,11 +623,15 @@
     {
      "fecha": "2026-09-29",
      "v": 84440.0
+    },
+    {
+     "fecha": "2026-09-30",
+     "v": 84440.0
     }
    ],
    "ultimo": 84440.0,
-   "prev": 83940.0,
-   "fecha": "2026-09-29"
+   "prev": 84440.0,
+   "fecha": "2026-09-30"
   },
   "GD30": {
    "serie": [
@@ -756,11 +746,15 @@
     {
      "fecha": "2026-09-29",
      "v": 87590.0
+    },
+    {
+     "fecha": "2026-09-30",
+     "v": 87500.0
     }
    ],
-   "ultimo": 87590.0,
-   "prev": 87010.0,
-   "fecha": "2026-09-29"
+   "ultimo": 87500.0,
+   "prev": 87590.0,
+   "fecha": "2026-09-30"
   }
  },
  "ipim": {
