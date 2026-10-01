@@ -1,33 +1,33 @@
 {
- "actualizado": "2026-10-01T09:00:48Z",
+ "actualizado": "2026-10-01T16:28:33Z",
  "granos_ros": {
-  "fecha": "29/09/2026",
-  "fecha_prev": "28/09/2026",
+  "fecha": "30/09/2026",
+  "fecha_prev": "29/09/2026",
   "moneda": "ARS/t",
-  "soja": 560000.0,
-  "soja_prev": 555000.0,
-  "sorgo": 295000.0,
-  "sorgo_prev": 287950.0,
+  "soja": 559000.0,
+  "soja_prev": 560000.0,
+  "sorgo": 294000.0,
+  "sorgo_prev": 295000.0,
   "girasol": null,
   "girasol_prev": null,
-  "trigo": 346500.0,
-  "trigo_prev": 347050.0,
-  "maiz": 295800.0,
-  "maiz_prev": 291750.0
+  "trigo": 333000.0,
+  "trigo_prev": 346500.0,
+  "maiz": 291000.0,
+  "maiz_prev": 295800.0
  },
  "futuros": {
-  "wti": 92.56,
-  "wti_pct": 2.37,
-  "brent": 100.4,
-  "brent_pct": 2.42,
-  "algodon": 78.12,
-  "algodon_pct": -0.51,
-  "soja_cbot": 474.5,
-  "soja_cbot_pct": -0.14,
-  "maiz_cbot": 197.9,
-  "maiz_cbot_pct": 0.4,
-  "trigo_cbot": 268.0,
-  "trigo_cbot_pct": 0.74
+  "wti": 91.8,
+  "wti_pct": 1.53,
+  "brent": 100.78,
+  "brent_pct": 2.81,
+  "algodon": 77.2,
+  "algodon_pct": -1.68,
+  "soja_cbot": 469.2,
+  "soja_cbot_pct": -1.24,
+  "maiz_cbot": 196.3,
+  "maiz_cbot_pct": -0.45,
+  "trigo_cbot": 265.8,
+  "trigo_cbot_pct": -0.07
  },
  "bonos_usa": {
   "y2": 4.88,
@@ -743,6 +743,61 @@
    "fecha": "2026-09-30"
   }
  },
- "ipim": null,
+ "ipim": {
+  "serie": [
+   {
+    "fecha": "2025-09-01",
+    "valor": 3.7
+   },
+   {
+    "fecha": "2025-10-01",
+    "valor": 1.1
+   },
+   {
+    "fecha": "2025-11-01",
+    "valor": 1.6
+   },
+   {
+    "fecha": "2025-12-01",
+    "valor": 2.4
+   },
+   {
+    "fecha": "2026-01-01",
+    "valor": 1.7
+   },
+   {
+    "fecha": "2026-02-01",
+    "valor": 1.0
+   },
+   {
+    "fecha": "2026-03-01",
+    "valor": 3.4
+   },
+   {
+    "fecha": "2026-04-01",
+    "valor": 5.2
+   },
+   {
+    "fecha": "2026-05-01",
+    "valor": 2.5
+   },
+   {
+    "fecha": "2026-06-01",
+    "valor": 1.1
+   },
+   {
+    "fecha": "2026-07-01",
+    "valor": 0.8
+   },
+   {
+    "fecha": "2026-08-01",
+    "valor": 2.1
+   }
+  ],
+  "ultimo": {
+   "fecha": "2026-08-01",
+   "valor": 2.1
+  }
+ },
  "novillo": null
 }
