@@ -1,33 +1,33 @@
 {
- "actualizado": "2026-10-09T02:13:26Z",
+ "actualizado": "2026-10-09T16:16:51Z",
  "granos_ros": {
-  "fecha": "07/10/2026",
-  "fecha_prev": "06/10/2026",
+  "fecha": "08/10/2026",
+  "fecha_prev": "07/10/2026",
   "moneda": "ARS/t",
   "soja": 560000.0,
   "soja_prev": 560000.0,
-  "sorgo": 298600.0,
-  "sorgo_prev": 299000.0,
+  "sorgo": null,
+  "sorgo_prev": 298600.0,
   "girasol": null,
   "girasol_prev": null,
-  "trigo": 342300.0,
-  "trigo_prev": 343000.0,
-  "maiz": 294800.0,
-  "maiz_prev": 294000.0
+  "trigo": 342700.0,
+  "trigo_prev": 342300.0,
+  "maiz": 293500.0,
+  "maiz_prev": 294800.0
  },
  "futuros": {
-  "wti": 90.77,
-  "wti_pct": -0.79,
-  "brent": 103.35,
-  "brent_pct": -0.89,
-  "algodon": 80.89,
-  "algodon_pct": 1.19,
-  "soja_cbot": 477.1,
-  "soja_cbot_pct": 0.85,
-  "maiz_cbot": 198.1,
-  "maiz_cbot_pct": 0.6,
-  "trigo_cbot": 270.4,
-  "trigo_cbot_pct": 0.51
+  "wti": 91.72,
+  "wti_pct": 0.25,
+  "brent": 104.34,
+  "brent_pct": 0.06,
+  "algodon": 79.78,
+  "algodon_pct": -0.2,
+  "soja_cbot": 469.5,
+  "soja_cbot_pct": -0.76,
+  "maiz_cbot": 188.3,
+  "maiz_cbot_pct": -4.4,
+  "trigo_cbot": 263.2,
+  "trigo_cbot_pct": -2.16
  },
  "bonos_usa": {
   "y2": 4.75,
@@ -162,10 +162,6 @@
   ]
  },
  "riesgo_serie": [
-  {
-   "valor": 486,
-   "fecha": "2026-06-04"
-  },
   {
    "valor": 499,
    "fecha": "2026-06-05"
@@ -521,6 +517,10 @@
   {
    "valor": 586,
    "fecha": "2026-10-07"
+  },
+  {
+   "valor": 588,
+   "fecha": "2026-10-08"
   }
  ],
  "bonos_arg": {
@@ -771,61 +771,6 @@
    "fecha": "2026-10-08"
   }
  },
- "ipim": {
-  "serie": [
-   {
-    "fecha": "2025-09-01",
-    "valor": 3.7
-   },
-   {
-    "fecha": "2025-10-01",
-    "valor": 1.1
-   },
-   {
-    "fecha": "2025-11-01",
-    "valor": 1.6
-   },
-   {
-    "fecha": "2025-12-01",
-    "valor": 2.4
-   },
-   {
-    "fecha": "2026-01-01",
-    "valor": 1.7
-   },
-   {
-    "fecha": "2026-02-01",
-    "valor": 1.0
-   },
-   {
-    "fecha": "2026-03-01",
-    "valor": 3.4
-   },
-   {
-    "fecha": "2026-04-01",
-    "valor": 5.2
-   },
-   {
-    "fecha": "2026-05-01",
-    "valor": 2.5
-   },
-   {
-    "fecha": "2026-06-01",
-    "valor": 1.1
-   },
-   {
-    "fecha": "2026-07-01",
-    "valor": 0.8
-   },
-   {
-    "fecha": "2026-08-01",
-    "valor": 2.1
-   }
-  ],
-  "ultimo": {
-   "fecha": "2026-08-01",
-   "valor": 2.1
-  }
- },
+ "ipim": null,
  "novillo": null
 }
