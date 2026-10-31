@@ -1,20 +1,6 @@
 {
- "actualizado": "2026-10-31T13:20:44Z",
- "granos_ros": {
-  "fecha": "29/10/2026",
-  "fecha_prev": "28/10/2026",
-  "moneda": "ARS/t",
-  "soja": null,
-  "soja_prev": 550000.0,
-  "sorgo": null,
-  "sorgo_prev": null,
-  "girasol": null,
-  "girasol_prev": null,
-  "trigo": 311000.0,
-  "trigo_prev": 317300.0,
-  "maiz": 275400.0,
-  "maiz_prev": 277800.0
- },
+ "actualizado": "2026-10-31T14:20:41Z",
+ "granos_ros": null,
  "futuros": {
   "wti": 102.95,
   "wti_pct": 0.93,
