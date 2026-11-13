@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-13T19:20:36Z",
+ "actualizado": "2026-11-13T20:21:24Z",
  "granos_ros": {
   "fecha": "12/11/2026",
   "fecha_prev": "11/11/2026",
@@ -16,18 +16,18 @@
   "maiz_prev": 275000.0
  },
  "futuros": {
-  "wti": 88.53,
-  "wti_pct": -0.24,
-  "brent": 95.74,
-  "brent_pct": -0.08,
-  "algodon": 82.56,
-  "algodon_pct": 0.06,
-  "soja_cbot": 452.4,
-  "soja_cbot_pct": 1.0,
-  "maiz_cbot": 175.3,
-  "maiz_cbot_pct": 0.62,
-  "trigo_cbot": 238.9,
-  "trigo_cbot_pct": 1.25
+  "wti": 88.82,
+  "wti_pct": 0.09,
+  "brent": 95.96,
+  "brent_pct": 0.15,
+  "algodon": 82.53,
+  "algodon_pct": 0.02,
+  "soja_cbot": 453.0,
+  "soja_cbot_pct": 1.13,
+  "maiz_cbot": 175.6,
+  "maiz_cbot_pct": 0.79,
+  "trigo_cbot": 239.0,
+  "trigo_cbot_pct": 1.29
  },
  "bonos_usa": {
   "y2": 4.86,
@@ -750,57 +750,57 @@
  "ipim": {
   "serie": [
    {
-    "fecha": "2025-09-01",
-    "valor": 3.7
+    "fecha": "2018-11-01",
+    "valor": 0.1
    },
    {
-    "fecha": "2025-10-01",
-    "valor": 1.1
+    "fecha": "2018-12-01",
+    "valor": 1.3
    },
    {
-    "fecha": "2025-11-01",
-    "valor": 1.6
+    "fecha": "2019-01-01",
+    "valor": 0.6
    },
    {
-    "fecha": "2025-12-01",
-    "valor": 2.4
-   },
-   {
-    "fecha": "2026-01-01",
-    "valor": 1.7
-   },
-   {
-    "fecha": "2026-02-01",
-    "valor": 1.0
-   },
-   {
-    "fecha": "2026-03-01",
+    "fecha": "2019-02-01",
     "valor": 3.4
    },
    {
-    "fecha": "2026-04-01",
-    "valor": 5.2
+    "fecha": "2019-03-01",
+    "valor": 4.1
    },
    {
-    "fecha": "2026-05-01",
-    "valor": 2.5
+    "fecha": "2019-04-01",
+    "valor": 4.6
    },
    {
-    "fecha": "2026-06-01",
-    "valor": 1.1
+    "fecha": "2019-05-01",
+    "valor": 4.9
    },
    {
-    "fecha": "2026-07-01",
-    "valor": 0.8
+    "fecha": "2019-06-01",
+    "valor": 1.7
    },
    {
-    "fecha": "2026-08-01",
-    "valor": 2.1
+    "fecha": "2019-07-01",
+    "valor": 0.1
+   },
+   {
+    "fecha": "2019-08-01",
+    "valor": 11.2
+   },
+   {
+    "fecha": "2019-09-01",
+    "valor": 4.2
+   },
+   {
+    "fecha": "2019-10-01",
+    "valor": 1176.8
    }
   ],
   "ultimo": {
-   "fecha": "2026-08-01",
-   "valor": 2.1
+   "fecha": "2019-10-01",
+   "valor": 1176.8
   }
  },
  "novillo": null
