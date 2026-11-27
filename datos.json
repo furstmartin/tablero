@@ -1,11 +1,11 @@
 {
- "actualizado": "2026-11-27T06:32:26Z",
+ "actualizado": "2026-11-27T07:23:21Z",
  "granos_ros": null,
  "futuros": {
-  "wti": 86.2,
-  "wti_pct": 3.01,
-  "brent": 97.24,
-  "brent_pct": 2.78,
+  "wti": 86.19,
+  "wti_pct": 3.0,
+  "brent": 97.77,
+  "brent_pct": 3.34,
   "algodon": 82.97,
   "algodon_pct": null,
   "soja_cbot": 457.1,
